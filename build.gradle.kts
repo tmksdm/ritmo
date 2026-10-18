@@ -9,16 +9,16 @@ plugins {
 }
 
 /**
- * Увеличивает версию проекта по схеме ггммдд.номер.
+ * Увеличивает версию проекта по схеме ггмм.дд.номер.
  *
  * Правила:
  * - если в version.properties другая дата (или файла нет) — начинается новый день, номер 1;
- * - если дата совпадает с сегодняшней — номер увеличивается (261018 -> 261018.2 -> 261018.3);
- * - номер 1 в имя версии не попадает: первая версия дня называется просто 261018.
+ * - если дата совпадает с сегодняшней — номер увеличивается (2610.18 -> 2610.18.2 -> 2610.18.3);
+ * - номер 1 в имя версии не попадает: первая версия дня называется просто 2610.18.
  */
 tasks.register("newVersion") {
     group = "versioning"
-    description = "Увеличивает версию в version.properties по схеме ггммдд.номер"
+    description = "Увеличивает версию в version.properties по схеме ггмм.дд.номер"
 
     val versionFile = rootProject.file("version.properties")
     val today = SimpleDateFormat("yyMMdd", Locale.US).format(Date())
@@ -46,7 +46,11 @@ tasks.register("newVersion") {
             properties.store(it, "Ritmo version scheme: yyMMdd.number (first version of a day has no number)")
         }
 
-        val name = if (newNumber <= 1) newDate else "$newDate.$newNumber"
+        val name = if (newNumber <= 1) formatDay(newDate) else "${formatDay(newDate)}.$newNumber"
         logger.lifecycle("Версия: $name")
     }
 }
+
+/** 261018 -> 2610.18 */
+fun formatDay(date: String): String =
+    if (date.length == 6) "${date.substring(0, 4)}.${date.substring(4, 6)}" else date

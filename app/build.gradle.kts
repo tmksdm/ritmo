@@ -5,15 +5,21 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
-// Схема версий проекта: ггммдд.номер. Первая сборка дня — без номера (например 261018),
-// последующие — 261018.2, 261018.3 и так далее. Инкремент: ./gradlew newVersion
+// Схема версий проекта: ггмм.дд.номер. Первая сборка дня — без номера (например 2610.18),
+// последующие — 2610.18.2, 2610.18.3 и так далее. Инкремент: ./gradlew newVersion
 val versionProperties = Properties().apply {
     val file = rootProject.file("version.properties")
     if (file.exists()) file.inputStream().use { load(it) }
 }
-val versionDate = versionProperties.getProperty("versionDate", "260101")
+val versionDate = versionProperties.getProperty("versionDate", "260101") // ггммдд
 val versionNumber = versionProperties.getProperty("versionNumber", "1").toIntOrNull() ?: 1
-val ritmoVersionName = if (versionNumber <= 1) versionDate else "$versionDate.$versionNumber"
+// 261018 -> 2610.18
+val versionDay = if (versionDate.length == 6) {
+    "${versionDate.substring(0, 4)}.${versionDate.substring(4, 6)}"
+} else {
+    versionDate
+}
+val ritmoVersionName = if (versionNumber <= 1) versionDay else "$versionDay.$versionNumber"
 val ritmoVersionCode = (versionDate.toIntOrNull() ?: 260101) * 100 + versionNumber
 
 android {
