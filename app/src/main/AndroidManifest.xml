@@ -26,12 +26,11 @@
         <activity
             android:name=".EditActivity"
             android:exported="false"
-            android:parentActivityName=".MainActivity" />
+            android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".SettingsActivity"
-            android:exported="false"
-            android:parentActivityName=".MainActivity" />
+            android:exported="false" />
 
         <receiver
             android:name=".ReminderReceiver"

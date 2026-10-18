@@ -5,8 +5,7 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
+import android.view.View
 import android.widget.Button
 import android.widget.ListView
 import android.widget.TextView
@@ -17,11 +16,15 @@ class MainActivity : Activity() {
     private lateinit var adapter: ReminderAdapter
     private var reminders: MutableList<Reminder> = mutableListOf()
     private var exactAlarmDialogShown = false
+    private var lastExactAlarmState: Boolean? = null
+    private var appliedTheme = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        appliedTheme = ThemePrefs.themeResId(this)
+        setTheme(appliedTheme)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        title = getString(R.string.app_name)
+        findViewById<View>(R.id.root).applySystemBarInsets()
 
         adapter = ReminderAdapter(this, ::toggleReminder, ::editReminder)
         val listView = findViewById<ListView>(R.id.reminder_list)
@@ -32,27 +35,22 @@ class MainActivity : Activity() {
             true
         }
         findViewById<Button>(R.id.add_button).setOnClickListener { editReminder(null) }
+        findViewById<Button>(R.id.settings_button).setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
 
         requestNotificationPermissionIfNeeded()
     }
 
     override fun onResume() {
         super.onResume()
-        reload()
-        warnAboutExactAlarmsIfNeeded()
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menu.add(Menu.NONE, MENU_SETTINGS, Menu.NONE, R.string.settings)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == MENU_SETTINGS) {
-            startActivity(Intent(this, SettingsActivity::class.java))
-            return true
+        if (appliedTheme != ThemePrefs.themeResId(this)) {
+            // Пользователь сменил тему в настройках — пересоздаём экран.
+            recreate()
+            return
         }
-        return super.onOptionsItemSelected(item)
+        reload()
+        handleExactAlarmState()
     }
 
     private fun reload() {
@@ -87,6 +85,16 @@ class MainActivity : Activity() {
             .show()
     }
 
+    private fun handleExactAlarmState() {
+        val exact = AlarmScheduler.canScheduleExact(this)
+        if (lastExactAlarmState == false && exact) {
+            // Доступ выдан: перепланируем активные напоминания в точном режиме.
+            AlarmScheduler.rescheduleAll(this)
+        }
+        lastExactAlarmState = exact
+        warnAboutExactAlarmsIfNeeded()
+    }
+
     private fun requestNotificationPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             !NotificationHelper.canPostNotifications(this)
@@ -107,7 +115,6 @@ class MainActivity : Activity() {
     }
 
     private companion object {
-        const val MENU_SETTINGS = 1
         const val REQUEST_NOTIFICATIONS = 100
     }
 }

@@ -22,6 +22,13 @@ val versionDay = if (versionDate.length == 6) {
 val ritmoVersionName = if (versionNumber <= 1) versionDay else "$versionDay.$versionNumber"
 val ritmoVersionCode = (versionDate.toIntOrNull() ?: 260101) * 100 + versionNumber
 
+// Постоянная подпись релизов. keystore.properties в git не попадает,
+// сам ключ лежит вне репозитория.
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesFile.exists()) keystorePropertiesFile.inputStream().use { load(it) }
+}
+
 android {
     namespace = "com.tmksdm.ritmo"
     compileSdk = 35
@@ -34,6 +41,17 @@ android {
         versionName = ritmoVersionName
     }
 
+    signingConfigs {
+        if (keystorePropertiesFile.exists()) {
+            create("release") {
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -42,9 +60,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Первый устанавливаемый APK подписывается debug-ключом.
-            // Для публикации в магазинах потребуется отдельный release-ключ.
-            signingConfig = signingConfigs.getByName("debug")
+            // Без keystore.properties (например, при клонировании репозитория)
+            // используется debug-подпись, чтобы сборка не падала.
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
     }
 

@@ -5,20 +5,22 @@
     <string name="add_reminder">Добавить напоминание</string>
     <string name="empty_list">Пока нет напоминаний.\nНажмите «Добавить напоминание», чтобы создать первое.</string>
     <string name="settings">Настройки</string>
+    <string name="back">Назад</string>
     <string name="new_title">Новое напоминание</string>
     <string name="edit_title">Напоминание</string>
 
-    <string name="field_title">Название</string>
+    <string name="field_title">Название напоминания</string>
     <string name="title_hint">Например: выпить воду</string>
     <string name="quick_pick">Быстрый выбор времени</string>
     <string name="preset_15_min">Через 15 минут</string>
     <string name="preset_1_hour">Через 1 час</string>
     <string name="preset_tomorrow">Завтра утром</string>
+    <string name="preset_selected">✓ %1$s</string>
     <string name="field_date_time">Дата и время</string>
     <string name="date_button">Дата: %1$s</string>
     <string name="time_button">Время: %1$s</string>
     <string name="schedule_value">Сработает: %1$s</string>
-    <string name="repeat_once">Повтор: однократно</string>
+    <string name="repeat_once_note">Повтор: однократно. Другие варианты повторения появятся в следующем обновлении.</string>
     <string name="save">Сохранить</string>
 
     <string name="delete">Удалить</string>
@@ -31,13 +33,18 @@
     <string name="notification_text">Напоминание Ritmo</string>
 
     <string name="error_empty_title">Введите название напоминания</string>
-    <string name="error_past_time">Выберите время в будущем</string>
+    <string name="error_past_time">Это время уже прошло. Выберите время в будущем.</string>
 
     <string name="exact_alarm_title">Нужен доступ к точным будильникам</string>
     <string name="exact_alarm_message">Без этого разрешения Android может задержать уведомление. Разрешите точные будильники, чтобы напоминания приходили вовремя.</string>
     <string name="allow">Разрешить</string>
     <string name="later">Позже</string>
     <string name="exact_alarm_not_needed">На этой версии Android отдельное разрешение не требуется.</string>
+
+    <string name="settings_theme">Тема оформления</string>
+    <string name="settings_theme_system">Системная</string>
+    <string name="settings_theme_light">Светлая</string>
+    <string name="settings_theme_dark">Тёмная</string>
 
     <string name="settings_notifications">Уведомления</string>
     <string name="settings_exact_alarm">Точные будильники</string>

@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- Android 10+ умеет переключать светлую и тёмную тему автоматически. -->
-    <style name="Theme.Ritmo" parent="@android:style/Theme.DeviceDefault.DayNight">
-        <item name="android:windowBackground">?android:attr/colorBackground</item>
-    </style>
-</resources>

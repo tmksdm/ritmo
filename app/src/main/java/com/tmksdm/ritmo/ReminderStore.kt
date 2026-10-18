@@ -1,36 +1,42 @@
 package com.tmksdm.ritmo
 
 import android.content.Context
+import android.util.AtomicFile
 import java.io.File
 
 /**
  * Локальное хранилище напоминаний: один JSON-файл во внутреннем каталоге приложения.
- * Запись выполняется через временный файл, чтобы не потерять данные при сбое.
+ * Запись идёт через AtomicFile, поэтому основной файл не может быть повреждён при сбое.
  */
 object ReminderStore {
 
     private const val FILE_NAME = "reminders.json"
 
     fun load(context: Context): MutableList<Reminder> {
-        val file = File(context.filesDir, FILE_NAME)
-        if (!file.exists()) return mutableListOf()
+        val file = atomicFile(context)
+        if (!file.baseFile.exists()) return mutableListOf()
         return try {
-            Reminder.listFromJson(file.readText())
+            file.openRead().use { stream -> Reminder.listFromJson(stream.reader().readText()) }
         } catch (e: Exception) {
             // Повреждённый файл сохраняем отдельно, чтобы данные не пропали молча.
-            runCatching { file.renameTo(File(context.filesDir, "$FILE_NAME.corrupt")) }
+            runCatching {
+                file.baseFile.copyTo(File(context.filesDir, "$FILE_NAME.corrupt"), overwrite = true)
+            }
             mutableListOf()
         }
     }
 
     fun save(context: Context, reminders: List<Reminder>) {
-        val file = File(context.filesDir, FILE_NAME)
-        val temp = File(context.filesDir, "$FILE_NAME.tmp")
-        val data = Reminder.listToJson(reminders)
-        temp.writeText(data)
-        if (!temp.renameTo(file)) {
-            file.writeText(data)
-            temp.delete()
+        val file = atomicFile(context)
+        val data = Reminder.listToJson(reminders).toByteArray()
+        val stream = file.startWrite()
+        try {
+            stream.write(data)
+            file.finishWrite(stream)
+        } catch (e: Exception) {
+            file.failWrite(stream)
         }
     }
+
+    private fun atomicFile(context: Context) = AtomicFile(File(context.filesDir, FILE_NAME))
 }

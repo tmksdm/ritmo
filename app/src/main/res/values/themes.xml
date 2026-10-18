@@ -1,6 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Ritmo" parent="@android:style/Theme.DeviceDefault">
+    <!--
+      Светлая тема. Фон, статусбар и навигация согласованы, значки системных панелей —
+      тёмные (windowLightStatusBar), поэтому читаются на светлом фоне.
+    -->
+    <style name="Theme.Ritmo" parent="@android:style/Theme.DeviceDefault.Light">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
         <item name="android:windowBackground">?android:attr/colorBackground</item>
+        <item name="android:statusBarColor">?android:attr/colorBackground</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <!-- Тёмная тема: светлые значки системных панелей на тёмном фоне. -->
+    <style name="Theme.RitmoDark" parent="@android:style/Theme.DeviceDefault">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">?android:attr/colorBackground</item>
+        <item name="android:statusBarColor">?android:attr/colorBackground</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>

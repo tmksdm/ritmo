@@ -10,3 +10,8 @@
 local.properties
 app/build
 *.apk
+/dist
+# Ключ подписи и его параметры никогда не попадают в репозиторий.
+keystore.properties
+*.jks
+*.keystore
