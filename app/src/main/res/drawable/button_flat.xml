@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Обычная кнопка: плоская, со скруглением и рамкой; без теней и подъёма. -->
+    <item android:state_selected="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#332F6FED" />
+            <stroke
+                android:width="1.5dp"
+                android:color="#992F6FED" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#262F6FED" />
+            <stroke
+                android:width="1dp"
+                android:color="?attr/ritmoCardStroke" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/ritmoCardBackground" />
+            <stroke
+                android:width="1dp"
+                android:color="?attr/ritmoCardStroke" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+</selector>

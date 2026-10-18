@@ -15,13 +15,36 @@
     <string name="preset_15_min">Через 15 минут</string>
     <string name="preset_1_hour">Через 1 час</string>
     <string name="preset_tomorrow">Завтра утром</string>
-    <string name="preset_selected">✓ %1$s</string>
-    <string name="field_date_time">Дата и время</string>
+    <string name="save">Сохранить</string>
+
+    <!-- Параметры расписания -->
+    <string name="repeat_label">Повтор</string>
+    <string name="date_time_label">Дата и время</string>
+    <string name="start_label">Начало отсчёта</string>
+    <string name="time_label">Время</string>
     <string name="date_button">Дата: %1$s</string>
     <string name="time_button">Время: %1$s</string>
-    <string name="schedule_value">Сработает: %1$s</string>
-    <string name="repeat_once_note">Повтор: однократно. Другие варианты повторения появятся в следующем обновлении.</string>
-    <string name="save">Сохранить</string>
+    <string name="interval_label">Интервал</string>
+    <string name="week_days_label">Дни недели</string>
+    <string name="week_day_mon">Пн</string>
+    <string name="week_day_tue">Вт</string>
+    <string name="week_day_wed">Ср</string>
+    <string name="week_day_thu">Чт</string>
+    <string name="week_day_fri">Пт</string>
+    <string name="week_day_sat">Сб</string>
+    <string name="week_day_sun">Вс</string>
+    <string name="monthly_day_label">День месяца</string>
+    <string name="every_n_days_label">Повторять каждые N дней</string>
+    <string name="window_limit">Только в заданные часы</string>
+    <string name="window_start_button">Начало: %1$s</string>
+    <string name="window_end_button">Конец: %1$s</string>
+    <string name="window_note_off">Уведомления приходят круглосуточно.</string>
+    <string name="window_note_on">Вне этого окна уведомления не приходят. На следующий день цикл начинается с начала окна.</string>
+    <string name="next_trigger">Следующее срабатывание: %1$s</string>
+    <string name="will_trigger">Сработает: %1$s</string>
+    <string name="preview_past">Указанное время уже прошло</string>
+    <string name="preview_select_days">Выберите хотя бы один день недели</string>
+    <string name="preview_no_next">Не удалось рассчитать следующее срабатывание</string>
 
     <string name="delete">Удалить</string>
     <string name="cancel">Отмена</string>
@@ -36,6 +59,9 @@
 
     <string name="error_empty_title">Введите название напоминания</string>
     <string name="error_past_time">Это время уже прошло. Выберите время в будущем.</string>
+    <string name="error_week_days">Выберите хотя бы один день недели</string>
+    <string name="error_window">Конец окна должен быть позже начала</string>
+    <string name="error_schedule">Проверьте параметры расписания</string>
     <string name="save_error">Не удалось сохранить напоминание. Проверьте свободное место и попробуйте снова.</string>
 
     <!-- Отображение расписания в списке -->
@@ -46,9 +72,9 @@
     <string name="schedule_expired">%1$s · время прошло</string>
     <string name="repeat_once_short">Однократно</string>
     <string name="repeat_daily">Ежедневно в %1$s</string>
-    <string name="repeat_weekly">По дням недели</string>
-    <string name="repeat_monthly">Ежемесячно, %1$d числа</string>
-    <string name="repeat_every_n_days">Каждые %1$d дн.</string>
+    <string name="repeat_weekly_days">По %1$s в %2$s</string>
+    <string name="repeat_monthly_day">Ежемесячно, %1$d числа в %2$s</string>
+    <string name="repeat_every_n_days_at">Каждые %1$d дн. в %2$s</string>
     <string name="repeat_every_minutes">Каждые %1$d мин.</string>
     <string name="repeat_every_hours">Каждые %1$d ч.</string>
     <string name="repeat_interval_window">%1$s, с %2$s до %3$s</string>

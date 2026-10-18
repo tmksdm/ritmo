@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 
-/** Срабатывание будильника: показывает системное уведомление. */
+/** Срабатывание будильника: показывает системное уведомление и планирует следующее. */
 class ReminderReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -16,19 +16,26 @@ class ReminderReceiver : BroadcastReceiver() {
         val reminder = reminders.firstOrNull { it.id == id } ?: return
         if (!reminder.enabled) return
 
+        val now = System.currentTimeMillis()
+        // Защита от повторной обработки одного и того же срабатывания.
+        if (reminder.lastTriggeredAt > 0 && now - reminder.lastTriggeredAt < DUPLICATE_WINDOW_MS) return
+
         NotificationHelper.show(context, reminder)
 
+        reminder.lastTriggeredAt = now
         if (reminder.repeatType == RepeatType.ONCE) {
-            // Однократное напоминание выполнено: смахивание уведомления не влияет на это.
+            // Однократное напоминание выполнено; смахивание уведомления на это не влияет.
             reminder.enabled = false
-            reminder.lastTriggeredAt = System.currentTimeMillis()
-            ReminderStore.save(context, reminders)
         }
-        // Повторяющиеся напоминания будут перепланированы в Этапе 2.
+        ReminderStore.save(context, reminders)
+
+        // Следующее срабатывание считается от текущего момента: пропущенные не накапливаются.
+        if (reminder.enabled) AlarmScheduler.schedule(context, reminder)
     }
 
     companion object {
         const val ACTION_TRIGGER = "com.tmksdm.ritmo.action.TRIGGER"
         const val EXTRA_ID = "reminder_id"
+        private const val DUPLICATE_WINDOW_MS = 5_000L
     }
 }

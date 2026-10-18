@@ -9,6 +9,7 @@
         <item name="android:navigationBarColor">?android:attr/colorBackground</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:buttonStyle">@style/Widget.Ritmo.Button</item>
         <item name="ritmoCardBackground">@color/card_background_light</item>
         <item name="ritmoCardStroke">@color/card_stroke_light</item>
         <item name="ritmoTextPrimary">@color/text_primary_light</item>
@@ -23,6 +24,7 @@
         <item name="android:navigationBarColor">?android:attr/colorBackground</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:buttonStyle">@style/Widget.Ritmo.Button</item>
         <item name="ritmoCardBackground">@color/card_background_dark</item>
         <item name="ritmoCardStroke">@color/card_stroke_dark</item>
         <item name="ritmoTextPrimary">@color/text_primary_dark</item>

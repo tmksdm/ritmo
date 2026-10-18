@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Порядок совпадает с порядком значений RepeatType. -->
+    <string-array name="repeat_types">
+        <item>Однократно</item>
+        <item>Через интервалы</item>
+        <item>Ежедневно</item>
+        <item>Еженедельно</item>
+        <item>Ежемесячно</item>
+        <item>Каждые N дней</item>
+    </string-array>
+
+    <string-array name="interval_units">
+        <item>минут</item>
+        <item>часов</item>
+    </string-array>
+
+    <!-- Порядок: понедельник — воскресенье. -->
+    <string-array name="week_days_short">
+        <item>Пн</item>
+        <item>Вт</item>
+        <item>Ср</item>
+        <item>Чт</item>
+        <item>Пт</item>
+        <item>Сб</item>
+        <item>Вс</item>
+    </string-array>
+</resources>

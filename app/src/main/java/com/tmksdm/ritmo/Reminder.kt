@@ -26,11 +26,12 @@ data class Reminder(
     var title: String,
     var enabled: Boolean = true,
     var repeatType: RepeatType = RepeatType.ONCE,
-    /** Для ONCE — точное время срабатывания. */
+    /** Для ONCE — момент срабатывания, для EVERY_N_DAYS — дата начала отсчёта. */
     var dateTimeMillis: Long = 0L,
     var intervalMinutes: Int = 60,
     var hour: Int = 9,
     var minute: Int = 0,
+    /** Дни недели в значениях [java.util.Calendar.DAY_OF_WEEK]. */
     var daysOfWeek: MutableSet<Int> = mutableSetOf(),
     var dayOfMonth: Int = 1,
     var everyNDays: Int = 3,
@@ -40,10 +41,17 @@ data class Reminder(
     var lastTriggeredAt: Long = 0L
 ) {
     /** Ближайшее срабатывание или null, если его не будет. */
-    fun nextTriggerAt(now: Long = System.currentTimeMillis()): Long? = when (repeatType) {
-        RepeatType.ONCE -> if (dateTimeMillis > now) dateTimeMillis else null
-        // Остальные типы повторений реализуются в Этапе 2.
-        else -> null
+    fun nextTriggerAt(now: Long = System.currentTimeMillis()): Long? = Schedules.nextTrigger(this, now)
+
+    /** Хватает ли данных, чтобы расписание имело смысл. */
+    fun hasValidSchedule(): Boolean = when (repeatType) {
+        RepeatType.ONCE, RepeatType.EVERY_N_DAYS -> dateTimeMillis > 0
+        RepeatType.INTERVAL -> intervalMinutes >= 1 &&
+            (!windowEnabled || windowEndMinutes > windowStartMinutes)
+
+        RepeatType.DAILY -> true
+        RepeatType.WEEKLY -> daysOfWeek.isNotEmpty()
+        RepeatType.MONTHLY -> dayOfMonth in 1..31
     }
 
     fun toJson(): JSONObject = JSONObject().apply {

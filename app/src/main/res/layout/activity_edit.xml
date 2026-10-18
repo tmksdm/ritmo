@@ -36,7 +36,6 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- Прокручиваемая середина: ввод названия и выбор даты/времени. -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -78,49 +77,358 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="@string/field_date_time"
+                android:layout_marginTop="20dp"
+                android:text="@string/repeat_label"
                 android:textColor="?attr/ritmoTextPrimary"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
-            <LinearLayout
+            <Spinner
+                android:id="@+id/repeat_spinner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:orientation="horizontal">
+                android:minHeight="48dp" />
+
+            <!-- Однократно и «каждые N дней»: дата и время начала. -->
+            <LinearLayout
+                android:id="@+id/date_time_block"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/date_time_label"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="@string/date_time_label"
+                    android:textColor="?attr/ritmoTextPrimary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/date_button"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:minHeight="48dp"
+                        android:textSize="14sp" />
+
+                    <Button
+                        android:id="@+id/time_button"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:minHeight="48dp"
+                        android:textSize="14sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Ежедневно, еженедельно, ежемесячно: только время. -->
+            <LinearLayout
+                android:id="@+id/time_block"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="@string/time_label"
+                    android:textColor="?attr/ritmoTextPrimary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
 
                 <Button
-                    android:id="@+id/date_button"
-                    android:layout_width="0dp"
+                    android:id="@+id/time_button_only"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:minHeight="48dp"
-                    android:textSize="14sp" />
-
-                <Button
-                    android:id="@+id/time_button"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_weight="1"
+                    android:layout_marginTop="4dp"
                     android:minHeight="48dp"
                     android:textSize="14sp" />
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/repeat_note"
+            <!-- Еженедельно: дни недели. -->
+            <LinearLayout
+                android:id="@+id/weekly_block"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="@string/repeat_once_note"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="@string/week_days_label"
+                    android:textColor="?attr/ritmoTextPrimary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:orientation="horizontal">
+
+                    <CheckBox
+                        android:id="@+id/week_day_0"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/segment_background"
+                        android:button="@null"
+                        android:gravity="center"
+                        android:minHeight="48dp"
+                        android:text="@string/week_day_mon"
+                        android:textColor="?attr/ritmoTextPrimary"
+                        android:textSize="13sp" />
+
+                    <CheckBox
+                        android:id="@+id/week_day_1"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/segment_background"
+                        android:button="@null"
+                        android:gravity="center"
+                        android:minHeight="48dp"
+                        android:text="@string/week_day_tue"
+                        android:textColor="?attr/ritmoTextPrimary"
+                        android:textSize="13sp" />
+
+                    <CheckBox
+                        android:id="@+id/week_day_2"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/segment_background"
+                        android:button="@null"
+                        android:gravity="center"
+                        android:minHeight="48dp"
+                        android:text="@string/week_day_wed"
+                        android:textColor="?attr/ritmoTextPrimary"
+                        android:textSize="13sp" />
+
+                    <CheckBox
+                        android:id="@+id/week_day_3"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/segment_background"
+                        android:button="@null"
+                        android:gravity="center"
+                        android:minHeight="48dp"
+                        android:text="@string/week_day_thu"
+                        android:textColor="?attr/ritmoTextPrimary"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <CheckBox
+                        android:id="@+id/week_day_4"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/segment_background"
+                        android:button="@null"
+                        android:gravity="center"
+                        android:minHeight="48dp"
+                        android:text="@string/week_day_fri"
+                        android:textColor="?attr/ritmoTextPrimary"
+                        android:textSize="13sp" />
+
+                    <CheckBox
+                        android:id="@+id/week_day_5"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/segment_background"
+                        android:button="@null"
+                        android:gravity="center"
+                        android:minHeight="48dp"
+                        android:text="@string/week_day_sat"
+                        android:textColor="?attr/ritmoTextPrimary"
+                        android:textSize="13sp" />
+
+                    <CheckBox
+                        android:id="@+id/week_day_6"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/segment_background"
+                        android:button="@null"
+                        android:gravity="center"
+                        android:minHeight="48dp"
+                        android:text="@string/week_day_sun"
+                        android:textColor="?attr/ritmoTextPrimary"
+                        android:textSize="13sp" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Ежемесячно: день месяца. -->
+            <LinearLayout
+                android:id="@+id/monthly_block"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="@string/monthly_day_label"
+                    android:textColor="?attr/ritmoTextPrimary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:orientation="horizontal">
+
+                    <NumberPicker
+                        android:id="@+id/month_day_picker"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:descendantFocusability="blocksDescendants" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Через интервалы: шаг и необязательное окно. -->
+            <LinearLayout
+                android:id="@+id/interval_block"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="@string/interval_label"
+                    android:textColor="?attr/ritmoTextPrimary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:orientation="horizontal">
+
+                    <NumberPicker
+                        android:id="@+id/interval_picker"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:descendantFocusability="blocksDescendants" />
+
+                    <Spinner
+                        android:id="@+id/interval_unit_spinner"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:minHeight="48dp" />
+                </LinearLayout>
+
+                <Switch
+                    android:id="@+id/window_switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:minHeight="48dp"
+                    android:text="@string/window_limit"
+                    android:textColor="?attr/ritmoTextPrimary"
+                    android:textSize="15sp" />
+
+                <LinearLayout
+                    android:id="@+id/window_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/window_start_button"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:minHeight="48dp"
+                        android:textSize="14sp" />
+
+                    <Button
+                        android:id="@+id/window_end_button"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:minHeight="48dp"
+                        android:textSize="14sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Каждые N дней: шаг в днях. -->
+            <LinearLayout
+                android:id="@+id/every_n_block"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="@string/every_n_days_label"
+                    android:textColor="?attr/ritmoTextPrimary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <NumberPicker
+                    android:id="@+id/every_days_picker"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:descendantFocusability="blocksDescendants" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/note"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
                 android:textColor="?attr/ritmoTextSecondary"
                 android:textSize="13sp" />
 
         </LinearLayout>
     </ScrollView>
 
-    <!-- Нижняя зона для большого пальца: результат выбора, пресеты и сохранение. -->
+    <!-- Нижняя зона для большого пальца: результат расчёта, пресеты и сохранение. -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -138,58 +446,64 @@
             android:textSize="16sp"
             android:textStyle="bold" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/quick_pick"
-            android:textColor="?attr/ritmoTextSecondary"
-            android:textSize="13sp" />
-
         <LinearLayout
+            android:id="@+id/presets_block"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
-            <Button
-                android:id="@+id/preset_15_min"
-                android:layout_width="0dp"
+            <TextView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:minHeight="48dp"
-                android:text="@string/preset_15_min"
-                android:textSize="11sp" />
+                android:layout_marginTop="8dp"
+                android:text="@string/quick_pick"
+                android:textColor="?attr/ritmoTextSecondary"
+                android:textSize="13sp" />
 
-            <Button
-                android:id="@+id/preset_1_hour"
-                android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_weight="1"
-                android:minHeight="48dp"
-                android:text="@string/preset_1_hour"
-                android:textSize="11sp" />
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/preset_tomorrow"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_weight="1"
-                android:minHeight="48dp"
-                android:text="@string/preset_tomorrow"
-                android:textSize="11sp" />
+                <Button
+                    android:id="@+id/preset_15_min"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:minHeight="48dp"
+                    android:text="@string/preset_15_min"
+                    android:textSize="11sp" />
+
+                <Button
+                    android:id="@+id/preset_1_hour"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:minHeight="48dp"
+                    android:text="@string/preset_1_hour"
+                    android:textSize="11sp" />
+
+                <Button
+                    android:id="@+id/preset_tomorrow"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:minHeight="48dp"
+                    android:text="@string/preset_tomorrow"
+                    android:textSize="11sp" />
+            </LinearLayout>
         </LinearLayout>
 
         <Button
             android:id="@+id/save_button"
+            style="@style/Widget.Ritmo.Button.Primary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:minHeight="56dp"
-            android:text="@string/save"
-            android:textSize="17sp" />
+            android:text="@string/save" />
 
     </LinearLayout>
 </LinearLayout>

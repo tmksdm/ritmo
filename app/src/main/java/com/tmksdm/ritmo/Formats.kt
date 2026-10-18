@@ -15,12 +15,18 @@ object Formats {
     private val timeFormat = SimpleDateFormat("HH:mm", Locale("ru"))
     private val dayFormat = SimpleDateFormat("d MMMM", Locale("ru"))
 
-    /** Полная дата со временем — для поля «Сработает». */
+    /** Полная дата со временем — для параметров расписания. */
     fun dateTime(millis: Long): String = fullDateTimeFormat.format(Date(millis))
 
     fun time(millis: Long): String = timeFormat.format(Date(millis))
 
     fun day(millis: Long): String = dayFormat.format(Date(millis))
+
+    fun timeOfDay(minutesOfDay: Int): String =
+        String.format(Locale.US, "%02d:%02d", minutesOfDay / 60, minutesOfDay % 60)
+
+    /** Время суток для расписаний, где важны только часы и минуты. */
+    fun timeOfDay(hour: Int, minute: Int): String = timeOfDay(hour * 60 + minute)
 
     /**
      * Компактная дата для списка: год показывается только если он отличается от текущего,
@@ -62,7 +68,7 @@ object Formats {
     }
 
     /** Краткое описание повторения без времени ближайшего срабатывания. */
-    private fun scheduleDescription(context: Context, reminder: Reminder): String = when (reminder.repeatType) {
+    fun scheduleDescription(context: Context, reminder: Reminder): String = when (reminder.repeatType) {
         RepeatType.ONCE -> context.getString(R.string.repeat_once_short)
 
         RepeatType.INTERVAL -> {
@@ -83,14 +89,61 @@ object Formats {
             }
         }
 
-        RepeatType.DAILY -> context.getString(R.string.repeat_daily, timeOfDay(reminder.hour * 60 + reminder.minute))
-        RepeatType.WEEKLY -> context.getString(R.string.repeat_weekly)
-        RepeatType.MONTHLY -> context.getString(R.string.repeat_monthly, reminder.dayOfMonth)
-        RepeatType.EVERY_N_DAYS -> context.getString(R.string.repeat_every_n_days, reminder.everyNDays)
+        RepeatType.DAILY -> context.getString(
+            R.string.repeat_daily,
+            timeOfDay(reminder.hour, reminder.minute)
+        )
+
+        RepeatType.WEEKLY -> context.getString(
+            R.string.repeat_weekly_days,
+            weekDaysLabel(context, reminder.daysOfWeek),
+            timeOfDay(reminder.hour, reminder.minute)
+        )
+
+        RepeatType.MONTHLY -> context.getString(
+            R.string.repeat_monthly_day,
+            reminder.dayOfMonth,
+            timeOfDay(reminder.hour, reminder.minute)
+        )
+
+        RepeatType.EVERY_N_DAYS -> context.getString(
+            R.string.repeat_every_n_days_at,
+            reminder.everyNDays,
+            timeOfDay(reminder.hour, reminder.minute)
+        )
     }
 
-    private fun timeOfDay(minutesOfDay: Int): String =
-        String.format(Locale.US, "%02d:%02d", minutesOfDay / 60, minutesOfDay % 60)
+    /** Список выбранных дней недели: «Пн, Ср, Пт». */
+    fun weekDaysLabel(context: Context, days: Set<Int>): String {
+        val names = context.resources.getStringArray(R.array.week_days_short)
+        return days.mapNotNull { calendarDay ->
+            val index = weekDayIndex(calendarDay)
+            if (index in names.indices) names[index] else null
+        }.sortedBy { names.indexOf(it) }.joinToString(", ")
+    }
+
+    /** [Calendar.MONDAY] — 0, [Calendar.SUNDAY] — 6. */
+    fun weekDayIndex(calendarDay: Int): Int = when (calendarDay) {
+        Calendar.MONDAY -> 0
+        Calendar.TUESDAY -> 1
+        Calendar.WEDNESDAY -> 2
+        Calendar.THURSDAY -> 3
+        Calendar.FRIDAY -> 4
+        Calendar.SATURDAY -> 5
+        Calendar.SUNDAY -> 6
+        else -> 0
+    }
+
+    /** Значение [Calendar.DAY_OF_WEEK] по индексу списка дней недели. */
+    fun calendarDayOfWeek(index: Int): Int = when (index) {
+        0 -> Calendar.MONDAY
+        1 -> Calendar.TUESDAY
+        2 -> Calendar.WEDNESDAY
+        3 -> Calendar.THURSDAY
+        4 -> Calendar.FRIDAY
+        5 -> Calendar.SATURDAY
+        else -> Calendar.SUNDAY
+    }
 
     /** Полночь «завтрашнего дня» + указанный час/минута. */
     fun tomorrowAt(hour: Int, minute: Int): Calendar {
