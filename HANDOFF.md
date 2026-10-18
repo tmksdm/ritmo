@@ -18,7 +18,7 @@
 - Релиз: `gh release create vX dist/ritmo-X.apk dist/ritmo-X-debug.apk`. Подпись —
   `D:\Pr\keys\ritmo-release.jks` с `keystore.properties` (в git не попадают), ключ не менять.
 - Проверка логики без устройства: `./gradlew -p D:/Pr/schedule-check run` — временный JVM-проект
-  с копиями `Reminder.kt` и `Schedules.kt` (в репозиторий не входит); скопировать туда исходники.
+  с копиями `Reminder.kt` и `Schedules.kt`; перед запуском скопировать туда исходники.
 
 ## Порядок работы над заданием
 
@@ -27,15 +27,6 @@
 3. Обновить документацию: устаревшее заменять, историю не накапливать.
 4. Коммит в `main`, push, GitHub Release, отчёт с SHA, ссылкой и размером APK.
 5. Остановиться до проверки пользователем.
-
-## Карта кода
-
-`Schedules.kt` — расчёт срабатываний. `Reminder.kt` — модель, JSON, реактивация, починка значений.
-`ReminderStore.kt` — хранение (`AtomicFile`). `AlarmScheduler.kt`, `ReminderReceiver.kt`,
-`BootReceiver.kt` — будильники, уведомления, восстановление расписания. `Backup.kt` — копии.
-`MainActivity.kt` и `ReminderAdapter.kt` — список. `EditActivity.kt` — форма и автосохранение.
-`SettingsActivity.kt` и `UpdateChecker.kt` — тема, разрешения, копии, обновление.
-`ThemePrefs.kt`, `Insets.kt`, `Formats.kt` — темы, отступы, форматирование.
 
 ## Чек-лист ревьюера (ChatGPT)
 
