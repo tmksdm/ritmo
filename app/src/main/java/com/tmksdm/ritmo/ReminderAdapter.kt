@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
+import android.widget.ImageButton
 import android.widget.Switch
 import android.widget.TextView
 
@@ -12,7 +13,8 @@ import android.widget.TextView
 class ReminderAdapter(
     private val context: Context,
     private val onToggle: (Reminder, Boolean) -> Unit,
-    private val onClick: (Reminder) -> Unit
+    private val onClick: (Reminder) -> Unit,
+    private val onMenu: (Reminder, View) -> Unit
 ) : BaseAdapter() {
 
     private val items = mutableListOf<Reminder>()
@@ -38,6 +40,9 @@ class ReminderAdapter(
         toggle.setOnCheckedChangeListener(null)
         toggle.isChecked = reminder.enabled
         toggle.setOnCheckedChangeListener { _, isChecked -> onToggle(reminder, isChecked) }
+
+        val menu = view.findViewById<ImageButton>(R.id.item_menu)
+        menu.setOnClickListener { anchor -> onMenu(reminder, anchor) }
 
         view.setOnClickListener { onClick(reminder) }
         return view

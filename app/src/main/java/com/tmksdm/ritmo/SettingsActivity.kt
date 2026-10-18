@@ -18,7 +18,10 @@ class SettingsActivity : Activity() {
     private lateinit var updatesStatus: TextView
     private lateinit var themeGroup: RadioGroup
     private var lastExactAlarmState: Boolean? = null
+    /** Пока true, изменения переключателя темы сделаны программой и не требуют реакции. */
     private var applyingTheme = false
+    /** Защита от повторного пересоздания экрана. */
+    private var recreateRequested = false
     private var checkingUpdates = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,17 +37,15 @@ class SettingsActivity : Activity() {
         findViewById<View>(R.id.back_button).setOnClickListener { finish() }
 
         themeGroup.setOnCheckedChangeListener { _, checkedId ->
-            if (applyingTheme) return@setOnCheckedChangeListener
-            ThemePrefs.setMode(
-                this,
-                when (checkedId) {
-                    R.id.theme_light -> ThemeMode.LIGHT
-                    R.id.theme_dark -> ThemeMode.DARK
-                    else -> ThemeMode.SYSTEM
-                }
-            )
-            // Пересоздаём экран, чтобы новая тема применилась сразу.
-            recreate()
+            val mode = modeFor(checkedId)
+            // Восстановление состояния RadioGroup и программная установка темы не должны
+            // запускать пересоздание экрана: иначе получается бесконечный цикл.
+            if (applyingTheme || mode == ThemePrefs.mode(this)) return@setOnCheckedChangeListener
+            ThemePrefs.setMode(this, mode)
+            if (!recreateRequested) {
+                recreateRequested = true
+                recreate()
+            }
         }
 
         findViewById<LinearLayout>(R.id.card_notifications).setOnClickListener {
@@ -60,9 +61,16 @@ class SettingsActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        recreateRequested = false
         updateStatuses()
         handleExactAlarmState()
         showPendingInstallError()
+    }
+
+    private fun modeFor(checkedId: Int): ThemeMode = when (checkedId) {
+        R.id.theme_light -> ThemeMode.LIGHT
+        R.id.theme_dark -> ThemeMode.DARK
+        else -> ThemeMode.SYSTEM
     }
 
     /** Сообщение установщика могло не отобразиться тостом, пока приложение было в фоне. */

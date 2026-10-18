@@ -6,9 +6,9 @@
     android:minHeight="64dp"
     android:orientation="horizontal"
     android:paddingStart="16dp"
-    android:paddingEnd="8dp"
-    android:paddingTop="10dp"
-    android:paddingBottom="10dp">
+    android:paddingEnd="4dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
 
     <LinearLayout
         android:layout_width="0dp"
@@ -22,6 +22,7 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="2"
+            android:textColor="?attr/ritmoTextPrimary"
             android:textSize="17sp"
             android:textStyle="bold" />
 
@@ -32,6 +33,7 @@
             android:layout_marginTop="2dp"
             android:ellipsize="end"
             android:maxLines="2"
+            android:textColor="?attr/ritmoTextSecondary"
             android:textSize="13sp" />
     </LinearLayout>
 
@@ -39,6 +41,15 @@
         android:id="@+id/enabled"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp" />
+        android:layout_marginStart="4dp" />
+
+    <ImageButton
+        android:id="@+id/item_menu"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/item_actions"
+        android:scaleType="center"
+        android:src="@drawable/ic_more_vert" />
 
 </LinearLayout>

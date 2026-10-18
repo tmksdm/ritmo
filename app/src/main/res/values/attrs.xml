@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Цвета карточек настроек: задаются в темах, поэтому соответствуют выбранному оформлению. -->
+    <!-- Цвета задаются в темах, поэтому соответствуют выбранному оформлению. -->
     <attr name="ritmoCardBackground" format="color" />
     <attr name="ritmoCardStroke" format="color" />
+    <attr name="ritmoTextPrimary" format="color" />
+    <attr name="ritmoTextSecondary" format="color" />
 </resources>

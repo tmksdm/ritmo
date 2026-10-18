@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#2F6FED</color>
+
     <color name="card_background_light">#FFFFFFFF</color>
     <color name="card_stroke_light">#1F000000</color>
     <color name="card_background_dark">#FF1F1F1F</color>
     <color name="card_stroke_dark">#33FFFFFF</color>
+
+    <!-- Контрастный основной текст и умеренно приглушённый второстепенный. -->
+    <color name="text_primary_light">#FF121417</color>
+    <color name="text_secondary_light">#FF5A6069</color>
+    <color name="text_primary_dark">#FFF5F6F8</color>
+    <color name="text_secondary_dark">#FFAFB4BC</color>
 </resources>

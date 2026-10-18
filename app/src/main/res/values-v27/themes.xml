@@ -11,6 +11,8 @@
         <item name="android:windowLightNavigationBar">true</item>
         <item name="ritmoCardBackground">@color/card_background_light</item>
         <item name="ritmoCardStroke">@color/card_stroke_light</item>
+        <item name="ritmoTextPrimary">@color/text_primary_light</item>
+        <item name="ritmoTextSecondary">@color/text_secondary_light</item>
     </style>
 
     <style name="Theme.RitmoDark" parent="@android:style/Theme.DeviceDefault">
@@ -23,5 +25,7 @@
         <item name="android:windowLightNavigationBar">false</item>
         <item name="ritmoCardBackground">@color/card_background_dark</item>
         <item name="ritmoCardStroke">@color/card_stroke_dark</item>
+        <item name="ritmoTextPrimary">@color/text_primary_dark</item>
+        <item name="ritmoTextSecondary">@color/text_secondary_dark</item>
     </style>
 </resources>

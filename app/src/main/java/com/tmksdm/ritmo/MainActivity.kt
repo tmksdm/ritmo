@@ -5,11 +5,15 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.view.Menu
 import android.view.View
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ListView
+import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
+import java.util.Locale
 
 /** Главный экран: список напоминаний. */
 class MainActivity : Activity() {
@@ -27,7 +31,7 @@ class MainActivity : Activity() {
         setContentView(R.layout.activity_main)
         findViewById<View>(R.id.root).applySystemBarInsets()
 
-        adapter = ReminderAdapter(this, ::toggleReminder, ::editReminder)
+        adapter = ReminderAdapter(this, ::toggleReminder, ::editReminder, ::showItemMenu)
         val listView = findViewById<ListView>(R.id.reminder_list)
         listView.adapter = adapter
         listView.emptyView = findViewById<TextView>(R.id.empty_view)
@@ -36,7 +40,7 @@ class MainActivity : Activity() {
             true
         }
         findViewById<Button>(R.id.add_button).setOnClickListener { editReminder(null) }
-        findViewById<Button>(R.id.settings_button).setOnClickListener {
+        findViewById<ImageButton>(R.id.settings_button).setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
 
@@ -55,14 +59,54 @@ class MainActivity : Activity() {
     }
 
     private fun reload() {
-        reminders = ReminderStore.load(this)
+        reminders = ReminderStore.load(this).sortedWith(displayOrder).toMutableList()
         adapter.setItems(reminders)
+    }
+
+    /** Активные — по ближайшему срабатыванию, затем выключенные, затем завершённые. */
+    private val displayOrder = compareBy<Reminder>(
+        { displayGroup(it) },
+        { displayTime(it) },
+        { it.title.lowercase(Locale.getDefault()) }
+    )
+
+    private fun displayGroup(reminder: Reminder): Int = when {
+        !reminder.enabled && reminder.repeatType == RepeatType.ONCE && reminder.lastTriggeredAt > 0 -> 2
+        !reminder.enabled -> 1
+        else -> 0
+    }
+
+    private fun displayTime(reminder: Reminder): Long = when (displayGroup(reminder)) {
+        0 -> reminder.nextTriggerAt() ?: Long.MAX_VALUE
+        else -> -reminder.dateTimeMillis
     }
 
     private fun editReminder(reminder: Reminder?) {
         startActivity(Intent(this, EditActivity::class.java).apply {
             if (reminder != null) putExtra(EditActivity.EXTRA_ID, reminder.id)
         })
+    }
+
+    private fun showItemMenu(reminder: Reminder, anchor: View) {
+        val popup = PopupMenu(this, anchor)
+        popup.menu.add(Menu.NONE, MENU_EDIT, 0, R.string.action_edit)
+        popup.menu.add(Menu.NONE, MENU_DELETE, 1, R.string.delete)
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                MENU_EDIT -> {
+                    editReminder(reminder)
+                    true
+                }
+
+                MENU_DELETE -> {
+                    confirmDelete(reminder)
+                    true
+                }
+
+                else -> false
+            }
+        }
+        popup.show()
     }
 
     private fun toggleReminder(reminder: Reminder, enabled: Boolean) {
@@ -124,5 +168,7 @@ class MainActivity : Activity() {
 
     private companion object {
         const val REQUEST_NOTIFICATIONS = 100
+        const val MENU_EDIT = 1
+        const val MENU_DELETE = 2
     }
 }
