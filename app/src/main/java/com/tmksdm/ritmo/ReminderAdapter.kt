@@ -32,7 +32,7 @@ class ReminderAdapter(
         val reminder = getItem(position)
 
         view.findViewById<TextView>(R.id.title).text = reminder.title
-        view.findViewById<TextView>(R.id.subtitle).text = Formats.subtitle(reminder)
+        view.findViewById<TextView>(R.id.subtitle).text = Formats.subtitle(context, reminder)
 
         val toggle = view.findViewById<Switch>(R.id.enabled)
         toggle.setOnCheckedChangeListener(null)

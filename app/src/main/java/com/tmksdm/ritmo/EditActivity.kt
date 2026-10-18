@@ -56,7 +56,7 @@ class EditActivity : Activity() {
         }
         findViewById<TextView>(R.id.screen_title)
             .setText(if (editing) R.string.edit_title else R.string.new_title)
-        findViewById<Button>(R.id.back_button).setOnClickListener { finish() }
+        findViewById<View>(R.id.back_button).setOnClickListener { finish() }
 
         preset15Min.setOnClickListener { applyPreset(Preset.IN_15_MIN, Formats.inMinutes(15)) }
         preset1Hour.setOnClickListener { applyPreset(Preset.IN_1_HOUR, Formats.inMinutes(60)) }
@@ -161,11 +161,14 @@ class EditActivity : Activity() {
             )
             reminders.add(reminder)
         }
-        ReminderStore.save(this, reminders)
+        if (!ReminderStore.save(this, reminders)) {
+            // Не сообщаем об успехе, если запись не удалась.
+            Toast.makeText(this, R.string.save_error, Toast.LENGTH_LONG).show()
+            return
+        }
         AlarmScheduler.schedule(this, reminder)
         finish()
     }
-
     companion object {
         const val EXTRA_ID = "reminder_id"
     }

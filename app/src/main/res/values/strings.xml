@@ -34,6 +34,22 @@
 
     <string name="error_empty_title">Введите название напоминания</string>
     <string name="error_past_time">Это время уже прошло. Выберите время в будущем.</string>
+    <string name="save_error">Не удалось сохранить напоминание. Проверьте свободное место и попробуйте снова.</string>
+
+    <!-- Отображение расписания в списке -->
+    <string name="schedule_once">Однократно · %1$s</string>
+    <string name="schedule_done">Завершено · %1$s</string>
+    <string name="schedule_off">Выключено · %1$s</string>
+    <string name="schedule_next">%1$s · затем %2$s</string>
+    <string name="schedule_expired">%1$s · время прошло</string>
+    <string name="repeat_once_short">Однократно</string>
+    <string name="repeat_daily">Ежедневно в %1$s</string>
+    <string name="repeat_weekly">По дням недели</string>
+    <string name="repeat_monthly">Ежемесячно, %1$d числа</string>
+    <string name="repeat_every_n_days">Каждые %1$d дн.</string>
+    <string name="repeat_every_minutes">Каждые %1$d мин.</string>
+    <string name="repeat_every_hours">Каждые %1$d ч.</string>
+    <string name="repeat_interval_window">%1$s, с %2$s до %3$s</string>
 
     <string name="exact_alarm_title">Нужен доступ к точным будильникам</string>
     <string name="exact_alarm_message">Без этого разрешения Android может задержать уведомление. Разрешите точные будильники, чтобы напоминания приходили вовремя.</string>
@@ -47,12 +63,28 @@
     <string name="settings_theme_dark">Тёмная</string>
 
     <string name="settings_notifications">Уведомления</string>
-    <string name="settings_exact_alarm">Точные будильники</string>
-    <string name="settings_open_notifications">Открыть настройки уведомлений</string>
-    <string name="settings_open_exact_alarms">Открыть настройки точных будильников</string>
-    <string name="settings_hint">В режиме энергосбережения и Doze система может задержать срабатывание. Ritmo использует точные будильники Android и не обходит системные ограничения.</string>
-    <string name="settings_backup_soon">Экспорт и импорт резервной копии появятся в следующем обновлении.</string>
+    <string name="settings_alarms">Будильники</string>
     <string name="status_granted">Разрешено</string>
     <string name="status_denied">Не разрешено</string>
-    <string name="settings_version">Версия: %1$s</string>
+    <string name="settings_hint">В режиме энергосбережения и Doze система может задержать срабатывание. Ritmo не обходит системные ограничения.</string>
+
+    <!-- Обновления -->
+    <string name="settings_updates">Обновления</string>
+    <string name="settings_installed_version">Установлена версия %1$s</string>
+    <string name="update_checking">Проверяем обновления…</string>
+    <string name="update_none">Обновлений нет. Установлена последняя версия (%1$s).</string>
+    <string name="update_available">Доступна версия %1$s. Установлена %2$s.</string>
+    <string name="update_downloading">Скачивание обновления: %1$d%%</string>
+    <string name="update_install">Установить</string>
+    <string name="update_error">Не удалось проверить обновления: %1$s</string>
+    <string name="update_error_network">нет соединения с GitHub</string>
+    <string name="update_error_not_apk">скачанный файл не является APK</string>
+    <string name="update_error_package">скачанный APK относится к другому приложению</string>
+    <string name="update_error_signature">подпись скачанного APK не совпадает с установленным приложением</string>
+    <string name="update_error_older">доступная версия не новее установленной</string>
+    <string name="update_sources_title">Нужно разрешение на установку</string>
+    <string name="update_sources_message">Разрешите Ritmo установку приложений в системных настройках и повторите проверку обновлений.</string>
+    <string name="update_sources_open">Открыть настройки</string>
+    <string name="install_failed">Установка не удалась: %1$s</string>
+    <string name="install_cancelled">Установка отменена</string>
 </resources>

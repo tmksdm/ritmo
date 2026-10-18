@@ -9,6 +9,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.ListView
 import android.widget.TextView
+import android.widget.Toast
 
 /** Главный экран: список напоминаний. */
 class MainActivity : Activity() {
@@ -66,8 +67,12 @@ class MainActivity : Activity() {
 
     private fun toggleReminder(reminder: Reminder, enabled: Boolean) {
         reminder.enabled = enabled
-        ReminderStore.save(this, reminders)
-        if (enabled) AlarmScheduler.schedule(this, reminder) else AlarmScheduler.cancel(this, reminder)
+        if (ReminderStore.save(this, reminders)) {
+            if (enabled) AlarmScheduler.schedule(this, reminder) else AlarmScheduler.cancel(this, reminder)
+        } else {
+            Toast.makeText(this, R.string.save_error, Toast.LENGTH_LONG).show()
+        }
+        // При неудачной записи reload() вернёт состояние, которое реально лежит на диске.
         reload()
     }
 
@@ -77,9 +82,12 @@ class MainActivity : Activity() {
             .setMessage(getString(R.string.delete_message, reminder.title))
             .setNegativeButton(R.string.cancel, null)
             .setPositiveButton(R.string.delete) { _, _ ->
-                AlarmScheduler.cancel(this, reminder)
-                reminders.removeAll { it.id == reminder.id }
-                ReminderStore.save(this, reminders)
+                val remaining = reminders.filterNot { it.id == reminder.id }
+                if (ReminderStore.save(this, remaining)) {
+                    AlarmScheduler.cancel(this, reminder)
+                } else {
+                    Toast.makeText(this, R.string.save_error, Toast.LENGTH_LONG).show()
+                }
                 reload()
             }
             .show()

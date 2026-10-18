@@ -11,6 +11,8 @@
         <item name="android:statusBarColor">?android:attr/colorBackground</item>
         <item name="android:navigationBarColor">@android:color/black</item>
         <item name="android:windowLightStatusBar">true</item>
+        <item name="ritmoCardBackground">@color/card_background_light</item>
+        <item name="ritmoCardStroke">@color/card_stroke_light</item>
     </style>
 
     <!-- Тёмная тема: светлые значки системных панелей на тёмном фоне. -->
@@ -21,5 +23,7 @@
         <item name="android:statusBarColor">?android:attr/colorBackground</item>
         <item name="android:navigationBarColor">@android:color/black</item>
         <item name="android:windowLightStatusBar">false</item>
+        <item name="ritmoCardBackground">@color/card_background_dark</item>
+        <item name="ritmoCardStroke">@color/card_stroke_dark</item>
     </style>
 </resources>

@@ -26,15 +26,22 @@ object ReminderStore {
         }
     }
 
-    fun save(context: Context, reminders: List<Reminder>) {
+    /**
+     * Сохраняет напоминания. Возвращает false, если запись не удалась: вызывающий код
+     * обязан сообщить об ошибке и не показывать успешный результат.
+     */
+    fun save(context: Context, reminders: List<Reminder>): Boolean {
         val file = atomicFile(context)
         val data = Reminder.listToJson(reminders).toByteArray()
-        val stream = file.startWrite()
-        try {
+        var stream: java.io.FileOutputStream? = null
+        return try {
+            stream = file.startWrite()
             stream.write(data)
             file.finishWrite(stream)
+            true
         } catch (e: Exception) {
-            file.failWrite(stream)
+            if (stream != null) runCatching { file.failWrite(stream) }
+            false
         }
     }
 
