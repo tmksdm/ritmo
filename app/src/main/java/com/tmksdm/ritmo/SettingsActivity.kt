@@ -62,6 +62,13 @@ class SettingsActivity : Activity() {
         super.onResume()
         updateStatuses()
         handleExactAlarmState()
+        showPendingInstallError()
+    }
+
+    /** Сообщение установщика могло не отобразиться тостом, пока приложение было в фоне. */
+    private fun showPendingInstallError() {
+        val message = InstallResultReceiver.consumeLastError(this) ?: return
+        message(R.string.settings_updates, message)
     }
 
     private fun updateStatuses() {
