@@ -106,6 +106,24 @@
     <string name="status_denied">Не разрешено</string>
     <string name="settings_hint">В режиме энергосбережения и Doze система может задержать срабатывание. Ritmo не обходит системные ограничения.</string>
 
+    <!-- Резервные копии -->
+    <string name="settings_backup">Резервные копии</string>
+    <string name="backup_create">Создать копию</string>
+    <string name="backup_create_hint">Все напоминания в JSON-файл</string>
+    <string name="backup_restore">Восстановить</string>
+    <string name="backup_restore_hint">Заменить напоминания из файла</string>
+    <string name="backup_created">Копия сохранена: напоминаний — %1$d</string>
+    <string name="backup_import_title">Заменить напоминания?</string>
+    <string name="backup_import_message">В файле %1$d напоминаний. Текущий список (%2$d) будет заменён.</string>
+    <string name="backup_import_confirm">Восстановить</string>
+    <string name="backup_imported">Восстановлено напоминаний: %1$d</string>
+    <string name="backup_export_error">Не удалось сохранить копию: %1$s</string>
+    <string name="backup_import_error">Не удалось восстановить: %1$s</string>
+    <string name="backup_error_not_json">файл не является резервной копией Ritmo</string>
+    <string name="backup_error_too_big">файл слишком большой</string>
+    <string name="backup_error_read">не удалось прочитать файл</string>
+    <string name="backup_error_write">не удалось записать файл</string>
+
     <!-- Обновления -->
     <string name="settings_updates">Обновления</string>
     <string name="settings_installed_version">Установлена версия %1$s</string>

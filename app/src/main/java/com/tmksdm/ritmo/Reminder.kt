@@ -66,6 +66,25 @@ data class Reminder(
         return true
     }
 
+    /**
+     * Приводит значения к допустимым. Нужно для данных из резервной копии:
+     * файл мог быть создан другой версией или отредактирован вручную.
+     */
+    fun sanitized(): Reminder = apply {
+        if (title.isBlank()) title = DEFAULT_TITLE
+        intervalMinutes = intervalMinutes.coerceIn(1, MAX_INTERVAL_MINUTES)
+        hour = hour.coerceIn(0, 23)
+        minute = minute.coerceIn(0, 59)
+        dayOfMonth = dayOfMonth.coerceIn(1, 31)
+        everyNDays = everyNDays.coerceIn(1, MAX_EVERY_N_DAYS)
+        windowStartMinutes = windowStartMinutes.coerceIn(0, 24 * 60 - 1)
+        windowEndMinutes = windowEndMinutes.coerceIn(0, 24 * 60 - 1)
+        if (windowEndMinutes <= windowStartMinutes) windowEnabled = false
+        daysOfWeek = daysOfWeek.filter { it in 1..7 }.toMutableSet()
+        if (lastTriggeredAt < 0) lastTriggeredAt = 0
+        if (dateTimeMillis < 0) dateTimeMillis = 0
+    }
+
     fun toJson(): JSONObject = JSONObject().apply {
         put("id", id)
         put("title", title)
@@ -85,6 +104,10 @@ data class Reminder(
     }
 
     companion object {
+        private const val DEFAULT_TITLE = "Напоминание"
+        private const val MAX_INTERVAL_MINUTES = 24 * 60
+        private const val MAX_EVERY_N_DAYS = 365
+
         /** @throws org.json.JSONException если данные повреждены. */
         fun fromJson(json: JSONObject): Reminder = Reminder(
             id = json.getLong("id"),
@@ -118,6 +141,15 @@ data class Reminder(
             val array = JSONArray()
             for (reminder in reminders) array.put(reminder.toJson())
             return array.toString()
+        }
+
+        /**
+         * Разбирает резервную копию. Значения приводятся к допустимым, дубликаты по id убираются.
+         * @throws org.json.JSONException если данные не являются списком напоминаний.
+         */
+        fun listFromBackup(text: String): MutableList<Reminder> {
+            val reminders = listFromJson(text)
+            return reminders.map { it.sanitized() }.distinctBy { it.id }.toMutableList()
         }
 
         private fun JSONArray?.toDaySet(): MutableSet<Int> {

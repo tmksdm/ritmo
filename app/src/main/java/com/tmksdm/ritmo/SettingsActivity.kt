@@ -2,6 +2,8 @@ package com.tmksdm.ritmo
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Intent
+import android.net.Uri
 import android.view.View
 import android.os.Bundle
 import android.widget.LinearLayout
@@ -57,6 +59,102 @@ class SettingsActivity : Activity() {
             }
         }
         findViewById<LinearLayout>(R.id.card_updates).setOnClickListener { checkForUpdates() }
+        findViewById<LinearLayout>(R.id.card_backup).setOnClickListener { createBackup() }
+        findViewById<LinearLayout>(R.id.card_restore).setOnClickListener { chooseBackupToRestore() }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode != RESULT_OK) return
+        when (requestCode) {
+            REQUEST_CREATE_BACKUP -> writeBackup(data?.data)
+            REQUEST_OPEN_BACKUP -> readBackup(data?.data)
+        }
+    }
+
+    /** Экспорт: место сохранения выбирает системный интерфейс Android. */
+    private fun createBackup() {
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "application/json"
+            putExtra(Intent.EXTRA_TITLE, Backup.fileName())
+        }
+        runCatching { startActivityForResult(intent, REQUEST_CREATE_BACKUP) }
+            .onFailure { error ->
+                message(
+                    R.string.settings_backup,
+                    getString(R.string.backup_export_error, error.message ?: getString(R.string.backup_error_write))
+                )
+            }
+    }
+
+    private fun writeBackup(uri: Uri?) {
+        if (uri == null) return
+        val reminders = ReminderStore.load(this)
+        val written = runCatching {
+            contentResolver.openOutputStream(uri, "wt")?.use { stream ->
+                stream.write(Backup.toJson(reminders).toByteArray())
+            } ?: throw IllegalStateException(getString(R.string.backup_error_write))
+        }.isSuccess
+        if (written) {
+            message(R.string.settings_backup, getString(R.string.backup_created, reminders.size))
+        } else {
+            message(
+                R.string.settings_backup,
+                getString(R.string.backup_export_error, getString(R.string.backup_error_write))
+            )
+        }
+    }
+
+    /** Импорт: файл проверяется до изменений, замена выполняется только после подтверждения. */
+    private fun chooseBackupToRestore() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "*/*"
+            putExtra(
+                Intent.EXTRA_MIME_TYPES,
+                arrayOf("application/json", "text/json", "text/plain", "application/octet-stream")
+            )
+        }
+        runCatching { startActivityForResult(intent, REQUEST_OPEN_BACKUP) }
+            .onFailure { error ->
+                message(
+                    R.string.settings_backup,
+                    getString(R.string.backup_import_error, error.message ?: getString(R.string.backup_error_read))
+                )
+            }
+    }
+
+    private fun readBackup(uri: Uri?) {
+        if (uri == null) return
+        val parsed = runCatching {
+            Backup.parse(Backup.readText(contentResolver, uri))
+        }
+        val imported = parsed.getOrElse { error ->
+            val reason = (error as? Backup.BackupException)?.reason
+            message(R.string.settings_backup, getString(R.string.backup_import_error, backupErrorText(reason)))
+            return
+        }
+        val current = ReminderStore.load(this)
+        AlertDialog.Builder(this)
+            .setTitle(R.string.backup_import_title)
+            .setMessage(getString(R.string.backup_import_message, imported.size, current.size))
+            .setNegativeButton(R.string.cancel, null)
+            .setPositiveButton(R.string.backup_import_confirm) { _, _ ->
+                if (Backup.restore(this, imported)) {
+                    message(R.string.settings_backup, getString(R.string.backup_imported, imported.size))
+                } else {
+                    message(R.string.settings_backup, getString(R.string.save_error))
+                }
+            }
+            .show()
+    }
+
+    private fun backupErrorText(reason: Backup.Error?): String = when (reason) {
+        Backup.Error.TOO_BIG -> getString(R.string.backup_error_too_big)
+        Backup.Error.READ_FAILED -> getString(R.string.backup_error_read)
+        Backup.Error.WRITE_FAILED -> getString(R.string.backup_error_write)
+        else -> getString(R.string.backup_error_not_json)
     }
 
     override fun onResume() {
@@ -228,4 +326,9 @@ class SettingsActivity : Activity() {
     }
 
     private fun onUi(action: () -> Unit) = runOnUiThread(action)
+
+    private companion object {
+        const val REQUEST_CREATE_BACKUP = 200
+        const val REQUEST_OPEN_BACKUP = 201
+    }
 }
