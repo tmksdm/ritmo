@@ -34,6 +34,15 @@
             android:textColor="?attr/ritmoTextPrimary"
             android:textSize="20sp"
             android:textStyle="bold" />
+
+        <!-- Ненавязчивый статус автосохранения при редактировании. -->
+        <TextView
+            android:id="@+id/autosave_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:textColor="?attr/ritmoTextSecondary"
+            android:textSize="13sp" />
     </LinearLayout>
 
     <ScrollView
@@ -310,13 +319,31 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
+                    android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <NumberPicker
-                        android:id="@+id/month_day_picker"
-                        android:layout_width="wrap_content"
+                    <EditText
+                        android:id="@+id/month_day_input"
+                        android:layout_width="84dp"
                         android:layout_height="wrap_content"
-                        android:descendantFocusability="blocksDescendants" />
+                        android:gravity="center"
+                        android:hint="@string/month_day_hint"
+                        android:importantForAutofill="no"
+                        android:inputType="number"
+                        android:maxLength="2"
+                        android:minHeight="48dp"
+                        android:textColor="?attr/ritmoTextPrimary"
+                        android:textColorHint="?attr/ritmoTextSecondary"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:text="@string/month_day_suffix"
+                        android:textColor="?attr/ritmoTextSecondary"
+                        android:textSize="14sp" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -340,21 +367,58 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
+                    android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <NumberPicker
-                        android:id="@+id/interval_picker"
-                        android:layout_width="wrap_content"
+                    <EditText
+                        android:id="@+id/interval_input"
+                        android:layout_width="84dp"
                         android:layout_height="wrap_content"
-                        android:descendantFocusability="blocksDescendants" />
+                        android:gravity="center"
+                        android:hint="@string/interval_hint"
+                        android:importantForAutofill="no"
+                        android:inputType="number"
+                        android:maxLength="3"
+                        android:minHeight="48dp"
+                        android:textColor="?attr/ritmoTextPrimary"
+                        android:textColorHint="?attr/ritmoTextSecondary"
+                        android:textSize="16sp" />
 
-                    <Spinner
-                        android:id="@+id/interval_unit_spinner"
+                    <RadioGroup
+                        android:id="@+id/interval_unit_group"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
+                        android:layout_marginStart="12dp"
                         android:layout_weight="1"
-                        android:minHeight="48dp" />
+                        android:orientation="horizontal">
+
+                        <RadioButton
+                            android:id="@+id/interval_unit_minutes"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/segment_background"
+                            android:button="@null"
+                            android:gravity="center"
+                            android:minHeight="48dp"
+                            android:text="@string/interval_unit_minutes"
+                            android:textColor="?attr/ritmoTextPrimary"
+                            android:textSize="13sp" />
+
+                        <RadioButton
+                            android:id="@+id/interval_unit_hours"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/segment_background"
+                            android:button="@null"
+                            android:gravity="center"
+                            android:minHeight="48dp"
+                            android:text="@string/interval_unit_hours"
+                            android:textColor="?attr/ritmoTextPrimary"
+                            android:textSize="13sp" />
+                    </RadioGroup>
                 </LinearLayout>
 
                 <Switch
@@ -409,12 +473,36 @@
                     android:textSize="15sp"
                     android:textStyle="bold" />
 
-                <NumberPicker
-                    android:id="@+id/every_days_picker"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:descendantFocusability="blocksDescendants" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <EditText
+                        android:id="@+id/every_days_input"
+                        android:layout_width="84dp"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:hint="@string/every_n_days_hint"
+                        android:importantForAutofill="no"
+                        android:inputType="number"
+                        android:maxLength="2"
+                        android:minHeight="48dp"
+                        android:textColor="?attr/ritmoTextPrimary"
+                        android:textColorHint="?attr/ritmoTextSecondary"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:text="@string/every_n_days_suffix"
+                        android:textColor="?attr/ritmoTextSecondary"
+                        android:textSize="14sp" />
+                </LinearLayout>
             </LinearLayout>
 
             <TextView

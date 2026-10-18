@@ -40,29 +40,41 @@ object Formats {
     }
 
     /** Строка под названием напоминания в списке. */
-    fun subtitle(context: Context, reminder: Reminder): String = when {
-        reminder.repeatType == RepeatType.ONCE && reminder.lastTriggeredAt > 0 ->
-            context.getString(R.string.schedule_done, compactDateTime(reminder.dateTimeMillis))
+    fun subtitle(context: Context, reminder: Reminder): String {
+        val now = System.currentTimeMillis()
+        return when {
+            // Однократное сработало и не переназначено на будущее.
+            reminder.repeatType == RepeatType.ONCE &&
+                reminder.lastTriggeredAt > 0 &&
+                reminder.dateTimeMillis <= now ->
+                context.getString(R.string.schedule_done, compactDateTime(reminder.dateTimeMillis))
 
-        !reminder.enabled -> context.getString(
-            R.string.schedule_off,
-            if (reminder.repeatType == RepeatType.ONCE) {
-                compactDateTime(reminder.dateTimeMillis)
-            } else {
-                scheduleDescription(context, reminder)
+            !reminder.enabled -> context.getString(
+                R.string.schedule_off,
+                if (reminder.repeatType == RepeatType.ONCE) {
+                    compactDateTime(reminder.dateTimeMillis)
+                } else {
+                    scheduleDescription(context, reminder)
+                }
+            )
+
+            reminder.repeatType == RepeatType.ONCE -> {
+                val next = reminder.nextTriggerAt(now)
+                if (next == null) {
+                    context.getString(R.string.schedule_expired, context.getString(R.string.repeat_once_short))
+                } else {
+                    context.getString(R.string.schedule_once, compactDateTime(reminder.dateTimeMillis))
+                }
             }
-        )
 
-        reminder.repeatType == RepeatType.ONCE ->
-            context.getString(R.string.schedule_once, compactDateTime(reminder.dateTimeMillis))
-
-        else -> {
-            val description = scheduleDescription(context, reminder)
-            val next = reminder.nextTriggerAt()
-            if (next == null) {
-                context.getString(R.string.schedule_expired, description)
-            } else {
-                context.getString(R.string.schedule_next, description, compactDateTime(next))
+            else -> {
+                val description = scheduleDescription(context, reminder)
+                val next = reminder.nextTriggerAt(now)
+                if (next == null) {
+                    context.getString(R.string.schedule_expired, description)
+                } else {
+                    context.getString(R.string.schedule_next, description, compactDateTime(next))
+                }
             }
         }
     }

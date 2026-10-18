@@ -54,6 +54,18 @@ data class Reminder(
         RepeatType.MONTHLY -> dayOfMonth in 1..31
     }
 
+    /**
+     * Переназначение срабатывания на будущее снимает устаревший признак завершения.
+     * Однократное напоминание, которое уже сработало, снова становится активным.
+     * Возвращает true, если признак завершения был снят.
+     */
+    fun reactivateIfRescheduled(nextTrigger: Long): Boolean {
+        if (lastTriggeredAt <= 0 || nextTrigger <= lastTriggeredAt) return false
+        lastTriggeredAt = 0
+        if (repeatType == RepeatType.ONCE) enabled = true
+        return true
+    }
+
     fun toJson(): JSONObject = JSONObject().apply {
         put("id", id)
         put("title", title)

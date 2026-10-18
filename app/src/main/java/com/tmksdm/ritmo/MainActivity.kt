@@ -110,6 +110,13 @@ class MainActivity : Activity() {
     }
 
     private fun toggleReminder(reminder: Reminder, enabled: Boolean) {
+        if (enabled && reminder.nextTriggerAt() == null) {
+            // Включать нечего: у однократного напоминания время уже прошло,
+            // у повторяющегося не заданы параметры расписания.
+            Toast.makeText(this, R.string.error_schedule, Toast.LENGTH_LONG).show()
+            reload()
+            return
+        }
         reminder.enabled = enabled
         if (ReminderStore.save(this, reminders)) {
             if (enabled) AlarmScheduler.schedule(this, reminder) else AlarmScheduler.cancel(this, reminder)

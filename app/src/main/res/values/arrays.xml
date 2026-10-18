@@ -10,11 +10,6 @@
         <item>Каждые N дней</item>
     </string-array>
 
-    <string-array name="interval_units">
-        <item>минут</item>
-        <item>часов</item>
-    </string-array>
-
     <!-- Порядок: понедельник — воскресенье. -->
     <string-array name="week_days_short">
         <item>Пн</item>

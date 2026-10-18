@@ -4,6 +4,10 @@ import android.app.Activity
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -11,7 +15,7 @@ import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.LinearLayout
-import android.widget.NumberPicker
+import android.widget.RadioGroup
 import android.widget.Spinner
 import android.widget.Switch
 import android.widget.TextView
@@ -34,20 +38,22 @@ class EditActivity : Activity() {
     private lateinit var weeklyBlock: LinearLayout
     private lateinit var weekDayChips: List<CheckBox>
     private lateinit var monthlyBlock: LinearLayout
-    private lateinit var monthDayPicker: NumberPicker
+    private lateinit var monthDayInput: EditText
     private lateinit var intervalBlock: LinearLayout
-    private lateinit var intervalPicker: NumberPicker
-    private lateinit var intervalUnitSpinner: Spinner
+    private lateinit var intervalInput: EditText
+    private lateinit var intervalUnitGroup: RadioGroup
     private lateinit var windowSwitch: Switch
     private lateinit var windowRow: LinearLayout
     private lateinit var windowStartButton: Button
     private lateinit var windowEndButton: Button
     private lateinit var everyNBlock: LinearLayout
-    private lateinit var everyDaysPicker: NumberPicker
+    private lateinit var everyDaysInput: EditText
     private lateinit var note: TextView
     private lateinit var scheduleValue: TextView
     private lateinit var presetsBlock: LinearLayout
     private lateinit var presetButtons: List<Button>
+    private lateinit var saveButton: Button
+    private lateinit var autosaveStatus: TextView
 
     private val calendar: Calendar = Calendar.getInstance()
     private val windowStart: Calendar = Calendar.getInstance()
@@ -57,6 +63,12 @@ class EditActivity : Activity() {
     private var lastType: RepeatType = RepeatType.ONCE
     private var preset = Preset.NONE
     private var appliedTheme = 0
+
+    private val autosaveHandler = Handler(Looper.getMainLooper())
+    private val autosaveRunnable = Runnable { autosaveNow() }
+    private val clearStatusRunnable = Runnable { autosaveStatus.text = "" }
+    private var autosaveReady = false
+    private var lastSavedSnapshot: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         appliedTheme = ThemePrefs.themeResId(this)
@@ -71,18 +83,41 @@ class EditActivity : Activity() {
         windowEnd.set(Calendar.HOUR_OF_DAY, 21)
         windowEnd.set(Calendar.MINUTE, 0)
 
-        setUpSpinners()
-        setUpPickers()
+        setUpRepeatSpinner()
+        setUpNumericInputs()
         loadExistingReminder()
         setUpListeners()
 
         findViewById<View>(R.id.back_button).setOnClickListener { finish() }
         updateUi()
+
+        // В режиме создания напоминание добавляется явной кнопкой,
+        // при редактировании изменения сохраняются автоматически.
+        if (existing == null) {
+            saveButton.setText(R.string.create)
+        } else {
+            saveButton.visibility = View.GONE
+        }
+        autosaveReady = true
     }
 
     override fun onResume() {
         super.onResume()
         if (appliedTheme != ThemePrefs.themeResId(this)) recreate()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Не теряем последние правки, если пользователь уходит с экрана.
+        if (existing != null) {
+            autosaveHandler.removeCallbacks(autosaveRunnable)
+            autosaveNow()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        autosaveHandler.removeCallbacksAndMessages(null)
     }
 
     private fun bindViews() {
@@ -105,16 +140,16 @@ class EditActivity : Activity() {
             findViewById(R.id.week_day_6)
         )
         monthlyBlock = findViewById(R.id.monthly_block)
-        monthDayPicker = findViewById(R.id.month_day_picker)
+        monthDayInput = findViewById(R.id.month_day_input)
         intervalBlock = findViewById(R.id.interval_block)
-        intervalPicker = findViewById(R.id.interval_picker)
-        intervalUnitSpinner = findViewById(R.id.interval_unit_spinner)
+        intervalInput = findViewById(R.id.interval_input)
+        intervalUnitGroup = findViewById(R.id.interval_unit_group)
         windowSwitch = findViewById(R.id.window_switch)
         windowRow = findViewById(R.id.window_row)
         windowStartButton = findViewById(R.id.window_start_button)
         windowEndButton = findViewById(R.id.window_end_button)
         everyNBlock = findViewById(R.id.every_n_block)
-        everyDaysPicker = findViewById(R.id.every_days_picker)
+        everyDaysInput = findViewById(R.id.every_days_input)
         note = findViewById(R.id.note)
         scheduleValue = findViewById(R.id.schedule_value)
         presetsBlock = findViewById(R.id.presets_block)
@@ -123,42 +158,80 @@ class EditActivity : Activity() {
             findViewById(R.id.preset_1_hour),
             findViewById(R.id.preset_tomorrow)
         )
+        saveButton = findViewById(R.id.save_button)
+        autosaveStatus = findViewById(R.id.autosave_status)
     }
 
-    private fun setUpSpinners() {
+    private fun setUpRepeatSpinner() {
         repeatSpinner.adapter = ArrayAdapter(
             this,
             android.R.layout.simple_spinner_item,
             resources.getStringArray(R.array.repeat_types)
         ).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
-
-        intervalUnitSpinner.adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_item,
-            resources.getStringArray(R.array.interval_units)
-        ).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
     }
 
-    private fun setUpPickers() {
-        monthDayPicker.minValue = 1
-        monthDayPicker.maxValue = 31
-        monthDayPicker.value = 1
-        monthDayPicker.wrapSelectorWheel = false
-
-        everyDaysPicker.minValue = 1
-        everyDaysPicker.maxValue = 90
-        everyDaysPicker.value = 3
-        everyDaysPicker.wrapSelectorWheel = false
-
-        intervalPicker.minValue = 1
-        intervalPicker.maxValue = MINUTES_MAX
-        intervalPicker.value = 30
-        intervalPicker.wrapSelectorWheel = false
+    private fun setUpNumericInputs() {
+        listOf(monthDayInput, everyDaysInput, intervalInput).forEach { input ->
+            input.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+                override fun afterTextChanged(s: Editable?) {
+                    updatePreview()
+                    scheduleAutosave()
+                }
+            })
+        }
+        clampOnBlur(monthDayInput, 1, MONTH_DAY_MAX)
+        clampOnBlur(everyDaysInput, 1, EVERY_DAYS_MAX)
+        intervalInput.setOnFocusChangeListener { _, hasFocus -> if (!hasFocus) clampIntervalInput() }
+        intervalUnitGroup.setOnCheckedChangeListener { _, _ ->
+            clampIntervalInput()
+            updatePreview()
+            scheduleAutosave(0L)
+        }
+        // Название сохраняется после короткой паузы в вводе.
+        titleInput.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+            override fun afterTextChanged(s: Editable?) = scheduleAutosave()
+        })
     }
+
+    /** Значения вне диапазона мягко подтягиваются к допустимым, чтобы не мешать вводу. */
+    private fun clampOnBlur(input: EditText, min: Int, max: Int) {
+        input.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) return@setOnFocusChangeListener
+            val value = numberOrNull(input) ?: return@setOnFocusChangeListener
+            val clamped = value.coerceIn(min, max)
+            if (clamped != value) input.setText(clamped.toString())
+            scheduleAutosave(0L)
+        }
+    }
+
+    private fun clampIntervalInput() {
+        val value = numberOrNull(intervalInput) ?: return
+        val clamped = value.coerceIn(1, intervalMax())
+        if (clamped != value) intervalInput.setText(clamped.toString())
+    }
+
+    private val hoursSelected: Boolean
+        get() = intervalUnitGroup.checkedRadioButtonId == R.id.interval_unit_hours
+
+    private fun intervalMax(): Int = if (hoursSelected) HOURS_MAX else MINUTES_MAX
+
+    private fun numberOrNull(input: EditText): Int? = input.text.toString().trim().toIntOrNull()
+
+    private fun numberOrDefault(input: EditText, min: Int, max: Int, fallback: Int): Int =
+        numberOrNull(input)?.coerceIn(min, max) ?: fallback
 
     private fun loadExistingReminder() {
         val id = intent.getLongExtra(EXTRA_ID, 0L)
-        if (id == 0L) return
+        if (id == 0L) {
+            monthDayInput.setText(DEFAULT_MONTH_DAY.toString())
+            everyDaysInput.setText(DEFAULT_EVERY_DAYS.toString())
+            intervalInput.setText(DEFAULT_INTERVAL_MINUTES.toString())
+            return
+        }
         val reminder = ReminderStore.load(this).firstOrNull { it.id == id } ?: return
         existing = reminder
         titleInput.setText(reminder.title)
@@ -172,22 +245,25 @@ class EditActivity : Activity() {
         weekDayChips.forEachIndexed { index, chip ->
             chip.isChecked = reminder.daysOfWeek.contains(Formats.calendarDayOfWeek(index))
         }
-        monthDayPicker.value = reminder.dayOfMonth.coerceIn(1, 31)
-        everyDaysPicker.value = reminder.everyNDays.coerceIn(1, 90)
+        monthDayInput.setText(reminder.dayOfMonth.coerceIn(1, MONTH_DAY_MAX).toString())
+        everyDaysInput.setText(reminder.everyNDays.coerceIn(1, EVERY_DAYS_MAX).toString())
         val wholeHours = reminder.intervalMinutes >= 60 && reminder.intervalMinutes % 60 == 0
-        intervalUnitSpinner.setSelection(if (wholeHours) 1 else 0)
-        applyIntervalRange(wholeHours)
-        intervalPicker.value = if (wholeHours) {
-            (reminder.intervalMinutes / 60).coerceIn(1, HOURS_MAX)
-        } else {
-            reminder.intervalMinutes.coerceIn(1, MINUTES_MAX)
-        }
+        intervalUnitGroup.check(if (wholeHours) R.id.interval_unit_hours else R.id.interval_unit_minutes)
+        intervalInput.setText(
+            if (wholeHours) {
+                (reminder.intervalMinutes / 60).coerceIn(1, HOURS_MAX).toString()
+            } else {
+                reminder.intervalMinutes.coerceIn(1, MINUTES_MAX).toString()
+            }
+        )
         windowSwitch.isChecked = reminder.windowEnabled
         windowStart.set(Calendar.HOUR_OF_DAY, reminder.windowStartMinutes / 60)
         windowStart.set(Calendar.MINUTE, reminder.windowStartMinutes % 60)
         windowEnd.set(Calendar.HOUR_OF_DAY, reminder.windowEndMinutes / 60)
         windowEnd.set(Calendar.MINUTE, reminder.windowEndMinutes % 60)
         findViewById<TextView>(R.id.screen_title).setText(R.string.edit_title)
+        // Отправная точка для автосохранения: без изменений запись не перезаписывается.
+        lastSavedSnapshot = reminder.toJson().toString()
     }
 
     private fun setUpListeners() {
@@ -200,18 +276,7 @@ class EditActivity : Activity() {
                 lastType = type
                 preset = Preset.NONE
                 updateUi()
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
-        }
-
-        intervalUnitSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val hours = position == 1
-                if (intervalPicker.maxValue != if (hours) HOURS_MAX else MINUTES_MAX) {
-                    applyIntervalRange(hours)
-                }
-                updatePreview()
+                scheduleAutosave(0L)
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
@@ -223,14 +288,17 @@ class EditActivity : Activity() {
         windowStartButton.setOnClickListener { pickWindowTime(isStart = true) }
         windowEndButton.setOnClickListener { pickWindowTime(isStart = false) }
 
-        weekDayChips.forEach { chip -> chip.setOnCheckedChangeListener { _, _ -> updatePreview() } }
-        monthDayPicker.setOnValueChangedListener { _, _, _ -> updatePreview() }
-        everyDaysPicker.setOnValueChangedListener { _, _, _ -> updatePreview() }
-        intervalPicker.setOnValueChangedListener { _, _, _ -> updatePreview() }
+        weekDayChips.forEach { chip ->
+            chip.setOnCheckedChangeListener { _, _ ->
+                updatePreview()
+                scheduleAutosave(0L)
+            }
+        }
         windowSwitch.setOnCheckedChangeListener { _, _ ->
             updateNote()
             windowRow.visibility = if (windowSwitch.isChecked) View.VISIBLE else View.GONE
             updatePreview()
+            scheduleAutosave(0L)
         }
 
         presetButtons[0].setOnClickListener { applyPreset(Preset.IN_15_MIN, Formats.inMinutes(15)) }
@@ -240,9 +308,48 @@ class EditActivity : Activity() {
         findViewById<Button>(R.id.save_button).setOnClickListener { save() }
     }
 
-    private fun applyIntervalRange(hours: Boolean) {
-        intervalPicker.maxValue = if (hours) HOURS_MAX else MINUTES_MAX
-        intervalPicker.value = intervalPicker.value.coerceIn(1, intervalPicker.maxValue)
+    /**
+     * Автосохранение доступно только при редактировании и только после загрузки формы.
+     * Выбор значения сохраняется сразу, ввод текста и чисел — после короткой паузы.
+     */
+    private fun scheduleAutosave(delayMs: Long = AUTOSAVE_DELAY_MS) {
+        if (existing == null || !autosaveReady) return
+        autosaveHandler.removeCallbacks(autosaveRunnable)
+        autosaveHandler.postDelayed(autosaveRunnable, delayMs)
+    }
+
+    private fun autosaveNow() {
+        val reminder = existing ?: return
+        if (!autosaveReady) return
+        buildReminder()
+        // Сохраняется только полностью корректное состояние расписания.
+        if (validate(reminder, requireFuture = false) != null) return
+        val next = reminder.nextTriggerAt()
+        if (next != null) reminder.reactivateIfRescheduled(next)
+        val snapshot = reminder.toJson().toString()
+        if (snapshot == lastSavedSnapshot) return
+        if (persist(reminder)) {
+            lastSavedSnapshot = snapshot
+            showSavedStatus()
+        }
+    }
+
+    private fun showSavedStatus() {
+        autosaveStatus.setText(R.string.saved)
+        autosaveHandler.removeCallbacks(clearStatusRunnable)
+        autosaveHandler.postDelayed(clearStatusRunnable, SAVED_STATUS_MS)
+    }
+
+    /** Записывает напоминание и перепланирует уведомление. При ошибке сообщает об этом. */
+    private fun persist(reminder: Reminder): Boolean {
+        val reminders = ReminderStore.load(this).filterNot { it.id == reminder.id }.toMutableList()
+        reminders.add(reminder)
+        if (!ReminderStore.save(this, reminders)) {
+            Toast.makeText(this, R.string.save_error, Toast.LENGTH_LONG).show()
+            return false
+        }
+        AlarmScheduler.schedule(this, reminder)
+        return true
     }
 
     private fun applyPreset(value: Preset, moment: Calendar) {
@@ -252,6 +359,7 @@ class EditActivity : Activity() {
         repeatSpinner.setSelection(RepeatType.ONCE.ordinal)
         preset = value
         updateUi()
+        scheduleAutosave(0L)
     }
 
     private fun pickDate() {
@@ -263,6 +371,7 @@ class EditActivity : Activity() {
                 calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
                 preset = Preset.NONE
                 updateUi()
+                scheduleAutosave(0L)
             },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
@@ -282,6 +391,7 @@ class EditActivity : Activity() {
                 calendar.set(Calendar.MILLISECOND, 0)
                 preset = Preset.NONE
                 updateUi()
+                scheduleAutosave(0L)
             },
             calendar.get(Calendar.HOUR_OF_DAY),
             calendar.get(Calendar.MINUTE),
@@ -297,6 +407,7 @@ class EditActivity : Activity() {
                 target.set(Calendar.HOUR_OF_DAY, hourOfDay)
                 target.set(Calendar.MINUTE, minute)
                 updateUi()
+                scheduleAutosave(0L)
             },
             target.get(Calendar.HOUR_OF_DAY),
             target.get(Calendar.MINUTE),
@@ -324,12 +435,12 @@ class EditActivity : Activity() {
                 if (chip.isChecked) Formats.calendarDayOfWeek(index) else null
             }.toMutableSet()
         }
-        target.dayOfMonth = monthDayPicker.value
-        target.everyNDays = everyDaysPicker.value
-        target.intervalMinutes = if (intervalUnitSpinner.selectedItemPosition == 1) {
-            intervalPicker.value * 60
+        target.dayOfMonth = numberOrDefault(monthDayInput, 1, MONTH_DAY_MAX, DEFAULT_MONTH_DAY)
+        target.everyNDays = numberOrDefault(everyDaysInput, 1, EVERY_DAYS_MAX, DEFAULT_EVERY_DAYS)
+        target.intervalMinutes = if (hoursSelected) {
+            numberOrDefault(intervalInput, 1, HOURS_MAX, 1) * 60
         } else {
-            intervalPicker.value
+            numberOrDefault(intervalInput, 1, MINUTES_MAX, DEFAULT_INTERVAL_MINUTES)
         }
         target.windowEnabled = windowSwitch.isChecked
         target.windowStartMinutes = windowStart.get(Calendar.HOUR_OF_DAY) * 60 + windowStart.get(Calendar.MINUTE)
@@ -406,46 +517,74 @@ class EditActivity : Activity() {
         }
     }
 
-    private fun validate(reminder: Reminder): String? = when {
-        reminder.title.isEmpty() -> getString(R.string.error_empty_title)
+    private fun validate(reminder: Reminder, requireFuture: Boolean): String? {
+        val intervalLimit = intervalMax()
+        val now = System.currentTimeMillis()
+        return when {
+            reminder.title.isEmpty() -> getString(R.string.error_empty_title)
 
-        (reminder.repeatType == RepeatType.ONCE || reminder.repeatType == RepeatType.EVERY_N_DAYS) &&
-            reminder.dateTimeMillis <= System.currentTimeMillis() -> getString(R.string.error_past_time)
+            reminder.repeatType == RepeatType.INTERVAL -> when {
+                numberOrNull(intervalInput)?.let { it in 1..intervalLimit } != true ->
+                    getString(R.string.error_number_range, 1, intervalLimit)
 
-        reminder.repeatType == RepeatType.WEEKLY && reminder.daysOfWeek.isEmpty() ->
-            getString(R.string.error_week_days)
+                reminder.windowEnabled && reminder.windowEndMinutes <= reminder.windowStartMinutes ->
+                    getString(R.string.error_window)
 
-        reminder.repeatType == RepeatType.INTERVAL && reminder.windowEnabled &&
-            reminder.windowEndMinutes <= reminder.windowStartMinutes -> getString(R.string.error_window)
+                else -> null
+            }
 
-        else -> null
+            reminder.repeatType == RepeatType.MONTHLY ->
+                if (numberOrNull(monthDayInput)?.let { it in 1..MONTH_DAY_MAX } == true) {
+                    null
+                } else {
+                    getString(R.string.error_number_range, 1, MONTH_DAY_MAX)
+                }
+
+            reminder.repeatType == RepeatType.EVERY_N_DAYS -> when {
+                numberOrNull(everyDaysInput)?.let { it in 1..EVERY_DAYS_MAX } != true ->
+                    getString(R.string.error_number_range, 1, EVERY_DAYS_MAX)
+
+                requireFuture && reminder.dateTimeMillis <= now -> getString(R.string.error_past_time)
+
+                else -> null
+            }
+
+            reminder.repeatType == RepeatType.ONCE && requireFuture && reminder.dateTimeMillis <= now ->
+                getString(R.string.error_past_time)
+
+            reminder.repeatType == RepeatType.WEEKLY && reminder.daysOfWeek.isEmpty() ->
+                getString(R.string.error_week_days)
+
+            else -> null
+        }
     }
 
+    /** Явное создание нового напоминания: неполные записи в список не попадают. */
     private fun save() {
         val reminder = buildReminder()
-        validate(reminder)?.let { message ->
+        validate(reminder, requireFuture = true)?.let { message ->
             Toast.makeText(this, message, Toast.LENGTH_LONG).show()
             return
         }
-        if (reminder.nextTriggerAt() == null) {
+        val next = reminder.nextTriggerAt()
+        if (next == null) {
             Toast.makeText(this, R.string.error_schedule, Toast.LENGTH_LONG).show()
             return
         }
-
-        val reminders = ReminderStore.load(this).filterNot { it.id == reminder.id }.toMutableList()
-        reminders.add(reminder)
-        if (!ReminderStore.save(this, reminders)) {
-            // Не сообщаем об успехе, если запись не удалась.
-            Toast.makeText(this, R.string.save_error, Toast.LENGTH_LONG).show()
-            return
-        }
-        AlarmScheduler.schedule(this, reminder)
-        finish()
+        reminder.reactivateIfRescheduled(next)
+        if (persist(reminder)) finish()
     }
 
     companion object {
         const val EXTRA_ID = "reminder_id"
+        private const val AUTOSAVE_DELAY_MS = 700L
+        private const val SAVED_STATUS_MS = 2_000L
         private const val MINUTES_MAX = 180
         private const val HOURS_MAX = 24
+        private const val MONTH_DAY_MAX = 31
+        private const val EVERY_DAYS_MAX = 90
+        private const val DEFAULT_INTERVAL_MINUTES = 30
+        private const val DEFAULT_MONTH_DAY = 1
+        private const val DEFAULT_EVERY_DAYS = 3
     }
 }
