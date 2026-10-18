@@ -1,8 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Цвета задаются в темах, поэтому соответствуют выбранному оформлению. -->
+    <!-- Токены оформления: значения задаются в темах, поэтому разметка и drawable
+         автоматически следуют выбранной светлой или тёмной теме. -->
+    <attr name="ritmoWindowBackground" format="color" />
     <attr name="ritmoCardBackground" format="color" />
     <attr name="ritmoCardStroke" format="color" />
     <attr name="ritmoTextPrimary" format="color" />
     <attr name="ritmoTextSecondary" format="color" />
+    <attr name="ritmoDivider" format="color" />
+    <attr name="ritmoAccent" format="color" />
+    <attr name="ritmoAccentSoft" format="color" />
+    <attr name="ritmoOnAccent" format="color" />
+    <attr name="ritmoChip" format="color" />
+    <attr name="ritmoChipPressed" format="color" />
+    <attr name="ritmoField" format="color" />
+    <attr name="ritmoSwitchTrackOff" format="color" />
+    <attr name="ritmoSwitchThumbOff" format="color" />
+    <attr name="ritmoSuccess" format="color" />
+    <attr name="ritmoSuccessSoft" format="color" />
 </resources>

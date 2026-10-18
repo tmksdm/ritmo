@@ -1,16 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#2F6FED</color>
-    <color name="button_primary_text">#FFFFFFFF</color>
 
-    <color name="card_background_light">#FFFFFFFF</color>
-    <color name="card_stroke_light">#1F000000</color>
-    <color name="card_background_dark">#FF1F1F1F</color>
-    <color name="card_stroke_dark">#33FFFFFF</color>
+    <!-- Акцент одинаков в обеих темах: применяется только к действиям. -->
+    <color name="accent">#2F6FED</color>
+    <color name="accent_pressed">#245FD6</color>
+    <color name="on_accent">#FFFFFF</color>
 
-    <!-- Контрастный основной текст и умеренно приглушённый второстепенный. -->
-    <color name="text_primary_light">#FF121417</color>
-    <color name="text_secondary_light">#FF5A6069</color>
-    <color name="text_primary_dark">#FFF5F6F8</color>
-    <color name="text_secondary_dark">#FFAFB4BC</color>
+    <!-- Светлая тема -->
+    <color name="window_background_light">#FFFFFF</color>
+    <color name="card_background_light">#FFFFFF</color>
+    <color name="text_primary_light">#16181D</color>
+    <color name="text_secondary_light">#6B7280</color>
+    <color name="line_light">#E6E8EC</color>
+    <color name="accent_soft_light">#E8F0FE</color>
+    <color name="chip_background_light">#F1F3F6</color>
+    <color name="chip_pressed_light">#E6E8EC</color>
+    <color name="field_background_light">#FFFFFF</color>
+    <color name="switch_track_off_light">#D7DBE2</color>
+    <color name="switch_thumb_off_light">#FFFFFF</color>
+    <color name="success_light">#1D7A3E</color>
+    <color name="success_soft_light">#E6F4EA</color>
+
+    <!-- Тёмная тема -->
+    <color name="window_background_dark">#0F1116</color>
+    <color name="card_background_dark">#171A21</color>
+    <color name="text_primary_dark">#EDEFF3</color>
+    <color name="text_secondary_dark">#9198A6</color>
+    <color name="line_dark">#262A33</color>
+    <color name="accent_soft_dark">#1B2740</color>
+    <color name="chip_background_dark">#1A1E27</color>
+    <color name="chip_pressed_dark">#232833</color>
+    <color name="field_background_dark">#1A1E27</color>
+    <color name="switch_track_off_dark">#3A4150</color>
+    <color name="switch_thumb_off_dark">#E7EAF0</color>
+    <color name="success_dark">#7FD199</color>
+    <color name="success_soft_dark">#17291E</color>
 </resources>

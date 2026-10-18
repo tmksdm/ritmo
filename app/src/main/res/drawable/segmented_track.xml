@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <!-- Общая подложка переключателя темы: внутри неё выделяется выбранный сегмент. -->
+    <solid android:color="?attr/ritmoChip" />
+    <corners android:radius="12dp" />
+</shape>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Бегунок переключателя: круг 22dp внутри площадки 28dp (отступ 3dp с каждой
+         стороны). Площадка задаёт ход бегунка по треку 46dp. -->
+    <item android:state_checked="true">
+        <layer-list>
+            <item
+                android:bottom="3dp"
+                android:left="3dp"
+                android:right="3dp"
+                android:top="3dp">
+                <shape android:shape="oval">
+                    <solid android:color="@color/on_accent" />
+                    <size
+                        android:width="22dp"
+                        android:height="22dp" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item>
+        <layer-list>
+            <item
+                android:bottom="3dp"
+                android:left="3dp"
+                android:right="3dp"
+                android:top="3dp">
+                <shape android:shape="oval">
+                    <solid android:color="?attr/ritmoSwitchThumbOff" />
+                    <size
+                        android:width="22dp"
+                        android:height="22dp" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</selector>

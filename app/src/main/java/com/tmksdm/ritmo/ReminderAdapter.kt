@@ -33,7 +33,12 @@ class ReminderAdapter(
         val view = convertView ?: LayoutInflater.from(context).inflate(R.layout.item_reminder, parent, false)
         val reminder = getItem(position)
 
-        view.findViewById<TextView>(R.id.title).text = reminder.title
+        val title = view.findViewById<TextView>(R.id.title)
+        title.text = reminder.title
+        // Выключенное напоминание приглушено, как и в макете.
+        title.setTextColor(
+            context.themeColor(if (reminder.enabled) R.attr.ritmoTextPrimary else R.attr.ritmoTextSecondary)
+        )
         view.findViewById<TextView>(R.id.subtitle).text = Formats.subtitle(context, reminder)
 
         val toggle = view.findViewById<Switch>(R.id.enabled)

@@ -1,5 +1,6 @@
 package com.tmksdm.ritmo
 
+import android.app.Activity
 import android.os.Build
 import android.view.View
 import android.view.WindowInsets
@@ -14,6 +15,16 @@ fun View.applySystemBarInsets() {
     val initialTop = paddingTop
     val initialRight = paddingRight
     val initialBottom = paddingBottom
+
+    // Автоматический контрастный слой системных панелей перекрывает фон экрана тёмной
+    // плёнкой. Он не нужен: панели окрашены в цвет фона.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        (context as? Activity)?.window?.let { window ->
+            @Suppress("DEPRECATION")
+            window.isStatusBarContrastEnforced = false
+            window.isNavigationBarContrastEnforced = false
+        }
+    }
 
     setOnApplyWindowInsetsListener { view, insets ->
         val top: Int

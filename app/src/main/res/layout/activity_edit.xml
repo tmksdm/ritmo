@@ -3,6 +3,7 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?attr/ritmoWindowBackground"
     android:orientation="vertical">
 
     <LinearLayout
@@ -13,7 +14,7 @@
         android:paddingStart="8dp"
         android:paddingEnd="16dp"
         android:paddingTop="8dp"
-        android:paddingBottom="4dp">
+        android:paddingBottom="6dp">
 
         <ImageButton
             android:id="@+id/back_button"
@@ -32,7 +33,7 @@
             android:layout_weight="1"
             android:text="@string/new_title"
             android:textColor="?attr/ritmoTextPrimary"
-            android:textSize="20sp"
+            android:textSize="19sp"
             android:textStyle="bold" />
 
         <!-- Ненавязчивый статус автосохранения при редактировании. -->
@@ -62,42 +63,44 @@
             android:paddingBottom="16dp">
 
             <TextView
+                style="@style/Widget.Ritmo.SectionLabel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/field_title"
-                android:textColor="?attr/ritmoTextPrimary"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                android:text="@string/field_title" />
 
             <EditText
                 android:id="@+id/title_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/field_background"
                 android:hint="@string/title_hint"
                 android:importantForAutofill="no"
                 android:inputType="textCapSentences"
                 android:maxLength="120"
-                android:minHeight="52dp"
+                android:minHeight="50dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
                 android:textColor="?attr/ritmoTextPrimary"
                 android:textColorHint="?attr/ritmoTextSecondary"
-                android:textSize="18sp" />
+                android:textSize="16sp" />
 
             <TextView
+                style="@style/Widget.Ritmo.SectionLabel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:text="@string/repeat_label"
-                android:textColor="?attr/ritmoTextPrimary"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                android:text="@string/repeat_label" />
 
             <Spinner
                 android:id="@+id/repeat_spinner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:minHeight="48dp" />
+                android:layout_marginTop="6dp"
+                android:background="@drawable/field_background_select"
+                android:minHeight="50dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="38dp" />
 
             <!-- Однократно и «каждые N дней»: дата и время начала. -->
             <LinearLayout
@@ -108,36 +111,32 @@
 
                 <TextView
                     android:id="@+id/date_time_label"
+                    style="@style/Widget.Ritmo.SectionLabel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
-                    android:text="@string/date_time_label"
-                    android:textColor="?attr/ritmoTextPrimary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
+                    android:text="@string/date_time_label" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="6dp"
                     android:orientation="horizontal">
 
                     <Button
                         android:id="@+id/date_button"
+                        style="@style/Widget.Ritmo.Button.Pill"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:minHeight="48dp"
-                        android:textSize="14sp" />
+                        android:layout_weight="1" />
 
                     <Button
                         android:id="@+id/time_button"
+                        style="@style/Widget.Ritmo.Button.Pill"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
-                        android:layout_weight="1"
-                        android:minHeight="48dp"
-                        android:textSize="14sp" />
+                        android:layout_weight="1" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -149,21 +148,18 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/Widget.Ritmo.SectionLabel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
-                    android:text="@string/time_label"
-                    android:textColor="?attr/ritmoTextPrimary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
+                    android:text="@string/time_label" />
 
                 <Button
                     android:id="@+id/time_button_only"
+                    style="@style/Widget.Ritmo.Button.Pill"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:minHeight="48dp"
-                    android:textSize="14sp" />
+                    android:layout_marginTop="6dp" />
             </LinearLayout>
 
             <!-- Еженедельно: дни недели. -->
@@ -174,18 +170,16 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/Widget.Ritmo.SectionLabel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
-                    android:text="@string/week_days_label"
-                    android:textColor="?attr/ritmoTextPrimary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
+                    android:text="@string/week_days_label" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="6dp"
                     android:orientation="horizontal">
 
                     <CheckBox
@@ -196,10 +190,11 @@
                         android:background="@drawable/segment_background"
                         android:button="@null"
                         android:gravity="center"
-                        android:minHeight="48dp"
+                        android:minHeight="42dp"
                         android:text="@string/week_day_mon"
-                        android:textColor="?attr/ritmoTextPrimary"
-                        android:textSize="13sp" />
+                        android:textColor="@color/chip_text"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
 
                     <CheckBox
                         android:id="@+id/week_day_1"
@@ -210,10 +205,11 @@
                         android:background="@drawable/segment_background"
                         android:button="@null"
                         android:gravity="center"
-                        android:minHeight="48dp"
+                        android:minHeight="42dp"
                         android:text="@string/week_day_tue"
-                        android:textColor="?attr/ritmoTextPrimary"
-                        android:textSize="13sp" />
+                        android:textColor="@color/chip_text"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
 
                     <CheckBox
                         android:id="@+id/week_day_2"
@@ -224,10 +220,11 @@
                         android:background="@drawable/segment_background"
                         android:button="@null"
                         android:gravity="center"
-                        android:minHeight="48dp"
+                        android:minHeight="42dp"
                         android:text="@string/week_day_wed"
-                        android:textColor="?attr/ritmoTextPrimary"
-                        android:textSize="13sp" />
+                        android:textColor="@color/chip_text"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
 
                     <CheckBox
                         android:id="@+id/week_day_3"
@@ -238,10 +235,11 @@
                         android:background="@drawable/segment_background"
                         android:button="@null"
                         android:gravity="center"
-                        android:minHeight="48dp"
+                        android:minHeight="42dp"
                         android:text="@string/week_day_thu"
-                        android:textColor="?attr/ritmoTextPrimary"
-                        android:textSize="13sp" />
+                        android:textColor="@color/chip_text"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -258,10 +256,11 @@
                         android:background="@drawable/segment_background"
                         android:button="@null"
                         android:gravity="center"
-                        android:minHeight="48dp"
+                        android:minHeight="42dp"
                         android:text="@string/week_day_fri"
-                        android:textColor="?attr/ritmoTextPrimary"
-                        android:textSize="13sp" />
+                        android:textColor="@color/chip_text"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
 
                     <CheckBox
                         android:id="@+id/week_day_5"
@@ -272,10 +271,11 @@
                         android:background="@drawable/segment_background"
                         android:button="@null"
                         android:gravity="center"
-                        android:minHeight="48dp"
+                        android:minHeight="42dp"
                         android:text="@string/week_day_sat"
-                        android:textColor="?attr/ritmoTextPrimary"
-                        android:textSize="13sp" />
+                        android:textColor="@color/chip_text"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
 
                     <CheckBox
                         android:id="@+id/week_day_6"
@@ -286,10 +286,11 @@
                         android:background="@drawable/segment_background"
                         android:button="@null"
                         android:gravity="center"
-                        android:minHeight="48dp"
+                        android:minHeight="42dp"
                         android:text="@string/week_day_sun"
-                        android:textColor="?attr/ritmoTextPrimary"
-                        android:textSize="13sp" />
+                        android:textColor="@color/chip_text"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
 
                     <View
                         android:layout_width="0dp"
@@ -307,34 +308,34 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/Widget.Ritmo.SectionLabel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
-                    android:text="@string/monthly_day_label"
-                    android:textColor="?attr/ritmoTextPrimary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
+                    android:text="@string/monthly_day_label" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="6dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <EditText
                         android:id="@+id/month_day_input"
-                        android:layout_width="84dp"
+                        android:layout_width="64dp"
                         android:layout_height="wrap_content"
+                        android:background="@drawable/field_background"
                         android:gravity="center"
                         android:hint="@string/month_day_hint"
                         android:importantForAutofill="no"
                         android:inputType="number"
                         android:maxLength="2"
-                        android:minHeight="48dp"
+                        android:minHeight="44dp"
                         android:textColor="?attr/ritmoTextPrimary"
                         android:textColorHint="?attr/ritmoTextSecondary"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -355,40 +356,40 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/Widget.Ritmo.SectionLabel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
-                    android:text="@string/interval_label"
-                    android:textColor="?attr/ritmoTextPrimary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
+                    android:text="@string/interval_label" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="6dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <EditText
                         android:id="@+id/interval_input"
-                        android:layout_width="84dp"
+                        android:layout_width="64dp"
                         android:layout_height="wrap_content"
+                        android:background="@drawable/field_background"
                         android:gravity="center"
                         android:hint="@string/interval_hint"
                         android:importantForAutofill="no"
                         android:inputType="number"
                         android:maxLength="3"
-                        android:minHeight="48dp"
+                        android:minHeight="44dp"
                         android:textColor="?attr/ritmoTextPrimary"
                         android:textColorHint="?attr/ritmoTextSecondary"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
 
                     <RadioGroup
                         android:id="@+id/interval_unit_group"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
+                        android:layout_marginStart="10dp"
                         android:layout_weight="1"
                         android:orientation="horizontal">
 
@@ -400,10 +401,11 @@
                             android:background="@drawable/segment_background"
                             android:button="@null"
                             android:gravity="center"
-                            android:minHeight="48dp"
+                            android:minHeight="44dp"
                             android:text="@string/interval_unit_minutes"
-                            android:textColor="?attr/ritmoTextPrimary"
-                            android:textSize="13sp" />
+                            android:textColor="@color/chip_text"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
 
                         <RadioButton
                             android:id="@+id/interval_unit_hours"
@@ -414,10 +416,11 @@
                             android:background="@drawable/segment_background"
                             android:button="@null"
                             android:gravity="center"
-                            android:minHeight="48dp"
+                            android:minHeight="44dp"
                             android:text="@string/interval_unit_hours"
-                            android:textColor="?attr/ritmoTextPrimary"
-                            android:textSize="13sp" />
+                            android:textColor="@color/chip_text"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
                     </RadioGroup>
                 </LinearLayout>
 
@@ -429,31 +432,31 @@
                     android:minHeight="48dp"
                     android:text="@string/window_limit"
                     android:textColor="?attr/ritmoTextPrimary"
-                    android:textSize="15sp" />
+                    android:textSize="15sp"
+                    android:thumb="@drawable/switch_thumb"
+                    android:track="@drawable/switch_track" />
 
                 <LinearLayout
                     android:id="@+id/window_row"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="6dp"
                     android:orientation="horizontal">
 
                     <Button
                         android:id="@+id/window_start_button"
+                        style="@style/Widget.Ritmo.Button.Pill"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:minHeight="48dp"
-                        android:textSize="14sp" />
+                        android:layout_weight="1" />
 
                     <Button
                         android:id="@+id/window_end_button"
+                        style="@style/Widget.Ritmo.Button.Pill"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
-                        android:layout_weight="1"
-                        android:minHeight="48dp"
-                        android:textSize="14sp" />
+                        android:layout_weight="1" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -465,34 +468,34 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/Widget.Ritmo.SectionLabel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
-                    android:text="@string/every_n_days_label"
-                    android:textColor="?attr/ritmoTextPrimary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
+                    android:text="@string/every_n_days_label" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="6dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <EditText
                         android:id="@+id/every_days_input"
-                        android:layout_width="84dp"
+                        android:layout_width="64dp"
                         android:layout_height="wrap_content"
+                        android:background="@drawable/field_background"
                         android:gravity="center"
                         android:hint="@string/every_n_days_hint"
                         android:importantForAutofill="no"
                         android:inputType="number"
                         android:maxLength="2"
-                        android:minHeight="48dp"
+                        android:minHeight="44dp"
                         android:textColor="?attr/ritmoTextPrimary"
                         android:textColorHint="?attr/ritmoTextSecondary"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="0dp"
@@ -530,9 +533,9 @@
             android:id="@+id/schedule_value"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="?attr/ritmoTextPrimary"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:gravity="center"
+            android:textColor="?attr/ritmoTextSecondary"
+            android:textSize="14sp" />
 
         <LinearLayout
             android:id="@+id/presets_block"
@@ -541,47 +544,43 @@
             android:orientation="vertical">
 
             <TextView
+                style="@style/Widget.Ritmo.SectionLabel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="@string/quick_pick"
-                android:textColor="?attr/ritmoTextSecondary"
-                android:textSize="13sp" />
+                android:layout_marginTop="10dp"
+                android:text="@string/quick_pick" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="6dp"
                 android:orientation="horizontal">
 
                 <Button
                     android:id="@+id/preset_15_min"
+                    style="@style/Widget.Ritmo.Button.Preset"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:minHeight="48dp"
-                    android:text="@string/preset_15_min"
-                    android:textSize="11sp" />
+                    android:text="@string/preset_15_min" />
 
                 <Button
                     android:id="@+id/preset_1_hour"
+                    style="@style/Widget.Ritmo.Button.Preset"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_weight="1"
-                    android:minHeight="48dp"
-                    android:text="@string/preset_1_hour"
-                    android:textSize="11sp" />
+                    android:text="@string/preset_1_hour" />
 
                 <Button
                     android:id="@+id/preset_tomorrow"
+                    style="@style/Widget.Ritmo.Button.Preset"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_weight="1"
-                    android:minHeight="48dp"
-                    android:text="@string/preset_tomorrow"
-                    android:textSize="11sp" />
+                    android:text="@string/preset_tomorrow" />
             </LinearLayout>
         </LinearLayout>
 

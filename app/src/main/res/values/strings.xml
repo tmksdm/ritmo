@@ -102,7 +102,7 @@
 
     <string name="settings_notifications">Уведомления</string>
     <string name="settings_alarms">Будильники</string>
-    <string name="status_granted">Разрешено</string>
+    <string name="status_granted">✓ Разрешено</string>
     <string name="status_denied">Не разрешено</string>
     <string name="settings_hint">В режиме энергосбережения и Doze система может задержать срабатывание. Ritmo не обходит системные ограничения.</string>
 

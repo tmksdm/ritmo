@@ -1,25 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Переключаемые элементы (тема, дни недели, пресеты): выделение фоном и рамкой. -->
+    <!-- Переключаемые элементы (дни недели, единицы интервала): отмеченный получает
+         заливку акцентом, остальные остаются мягкими подложками. -->
     <item android:state_checked="true">
         <shape android:shape="rectangle">
-            <solid android:color="#332F6FED" />
+            <solid android:color="?attr/ritmoAccent" />
             <stroke
-                android:width="1.5dp"
-                android:color="#992F6FED" />
-            <corners android:radius="8dp" />
+                android:width="1dp"
+                android:color="?attr/ritmoAccent" />
+            <corners android:radius="12dp" />
         </shape>
     </item>
     <item android:state_pressed="true">
         <shape android:shape="rectangle">
-            <solid android:color="#262F6FED" />
-            <corners android:radius="8dp" />
+            <solid android:color="?attr/ritmoAccentSoft" />
+            <corners android:radius="12dp" />
         </shape>
     </item>
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="@android:color/transparent" />
-            <corners android:radius="8dp" />
+            <solid android:color="?attr/ritmoChip" />
+            <corners android:radius="12dp" />
         </shape>
     </item>
 </selector>

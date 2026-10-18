@@ -1,30 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Тема задаётся целиком, поэтому набор элементов дублируется в
+         values-v27/themes.xml, который используется начиная с API 27. -->
     <style name="Theme.Ritmo" parent="@android:style/Theme.DeviceDefault.Light">
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
-        <item name="android:windowBackground">?android:attr/colorBackground</item>
-        <item name="android:statusBarColor">?android:attr/colorBackground</item>
+        <item name="android:windowBackground">@color/window_background_light</item>
+        <item name="android:statusBarColor">@color/window_background_light</item>
+        <!-- API 26 не умеет тёмные значки на нижней панели, поэтому она остаётся
+             тёмной: на светлом фоне значки были бы не видны. -->
         <item name="android:navigationBarColor">@android:color/black</item>
         <item name="android:windowLightStatusBar">true</item>
+        <item name="android:colorAccent">@color/accent</item>
+        <item name="android:textColorPrimary">@color/text_primary_light</item>
+        <item name="android:textColorSecondary">@color/text_secondary_light</item>
         <item name="android:buttonStyle">@style/Widget.Ritmo.Button</item>
+        <item name="ritmoWindowBackground">@color/window_background_light</item>
         <item name="ritmoCardBackground">@color/card_background_light</item>
-        <item name="ritmoCardStroke">@color/card_stroke_light</item>
+        <item name="ritmoCardStroke">@color/line_light</item>
         <item name="ritmoTextPrimary">@color/text_primary_light</item>
         <item name="ritmoTextSecondary">@color/text_secondary_light</item>
+        <item name="ritmoDivider">@color/line_light</item>
+        <item name="ritmoAccent">@color/accent</item>
+        <item name="ritmoAccentSoft">@color/accent_soft_light</item>
+        <item name="ritmoOnAccent">@color/on_accent</item>
+        <item name="ritmoChip">@color/chip_background_light</item>
+        <item name="ritmoChipPressed">@color/chip_pressed_light</item>
+        <item name="ritmoField">@color/field_background_light</item>
+        <item name="ritmoSwitchTrackOff">@color/switch_track_off_light</item>
+        <item name="ritmoSwitchThumbOff">@color/switch_thumb_off_light</item>
+        <item name="ritmoSuccess">@color/success_light</item>
+        <item name="ritmoSuccessSoft">@color/success_soft_light</item>
     </style>
 
     <style name="Theme.RitmoDark" parent="@android:style/Theme.DeviceDefault">
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
-        <item name="android:windowBackground">?android:attr/colorBackground</item>
-        <item name="android:statusBarColor">?android:attr/colorBackground</item>
+        <item name="android:windowBackground">@color/window_background_dark</item>
+        <item name="android:statusBarColor">@color/window_background_dark</item>
         <item name="android:navigationBarColor">@android:color/black</item>
         <item name="android:windowLightStatusBar">false</item>
+        <item name="android:colorAccent">@color/accent</item>
+        <item name="android:textColorPrimary">@color/text_primary_dark</item>
+        <item name="android:textColorSecondary">@color/text_secondary_dark</item>
         <item name="android:buttonStyle">@style/Widget.Ritmo.Button</item>
+        <item name="ritmoWindowBackground">@color/window_background_dark</item>
         <item name="ritmoCardBackground">@color/card_background_dark</item>
-        <item name="ritmoCardStroke">@color/card_stroke_dark</item>
+        <item name="ritmoCardStroke">@color/line_dark</item>
         <item name="ritmoTextPrimary">@color/text_primary_dark</item>
         <item name="ritmoTextSecondary">@color/text_secondary_dark</item>
+        <item name="ritmoDivider">@color/line_dark</item>
+        <item name="ritmoAccent">@color/accent</item>
+        <item name="ritmoAccentSoft">@color/accent_soft_dark</item>
+        <item name="ritmoOnAccent">@color/on_accent</item>
+        <item name="ritmoChip">@color/chip_background_dark</item>
+        <item name="ritmoChipPressed">@color/chip_pressed_dark</item>
+        <item name="ritmoField">@color/field_background_dark</item>
+        <item name="ritmoSwitchTrackOff">@color/switch_track_off_dark</item>
+        <item name="ritmoSwitchThumbOff">@color/switch_thumb_off_dark</item>
+        <item name="ritmoSuccess">@color/success_dark</item>
+        <item name="ritmoSuccessSoft">@color/success_soft_dark</item>
     </style>
 </resources>

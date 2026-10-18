@@ -187,15 +187,18 @@ class SettingsActivity : Activity() {
             }
         )
         applyingTheme = false
-        notificationsStatus.text = getString(
-            if (NotificationHelper.canPostNotifications(this)) R.string.status_granted else R.string.status_denied
-        )
-        exactAlarmStatus.text = getString(
-            if (AlarmScheduler.canScheduleExact(this)) R.string.status_granted else R.string.status_denied
-        )
+        applyStatusBadge(notificationsStatus, NotificationHelper.canPostNotifications(this))
+        applyStatusBadge(exactAlarmStatus, AlarmScheduler.canScheduleExact(this))
         if (!checkingUpdates) {
             updatesStatus.text = getString(R.string.settings_installed_version, BuildConfig.VERSION_NAME)
         }
+    }
+
+    /** Плашка состояния: выданное разрешение — зелёная, иначе нейтральная. */
+    private fun applyStatusBadge(view: TextView, granted: Boolean) {
+        view.setText(if (granted) R.string.status_granted else R.string.status_denied)
+        view.setBackgroundResource(if (granted) R.drawable.badge_ok else R.drawable.badge_neutral)
+        view.setTextColor(themeColor(if (granted) R.attr.ritmoSuccess else R.attr.ritmoTextSecondary))
     }
 
     private fun handleExactAlarmState() {
