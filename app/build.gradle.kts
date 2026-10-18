@@ -1,7 +1,20 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
 }
+
+// Схема версий проекта: ггммдд.номер. Первая сборка дня — без номера (например 261018),
+// последующие — 261018.2, 261018.3 и так далее. Инкремент: ./gradlew newVersion
+val versionProperties = Properties().apply {
+    val file = rootProject.file("version.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+val versionDate = versionProperties.getProperty("versionDate", "260101")
+val versionNumber = versionProperties.getProperty("versionNumber", "1").toIntOrNull() ?: 1
+val ritmoVersionName = if (versionNumber <= 1) versionDate else "$versionDate.$versionNumber"
+val ritmoVersionCode = (versionDate.toIntOrNull() ?: 260101) * 100 + versionNumber
 
 android {
     namespace = "com.tmksdm.ritmo"
@@ -11,8 +24,8 @@ android {
         applicationId = "com.tmksdm.ritmo"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = ritmoVersionCode
+        versionName = ritmoVersionName
     }
 
     buildTypes {
@@ -39,7 +52,7 @@ android {
     }
 
     buildFeatures {
-        buildConfig = false
+        buildConfig = true
     }
 }
 

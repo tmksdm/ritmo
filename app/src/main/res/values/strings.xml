@@ -47,4 +47,5 @@
     <string name="settings_backup_soon">Экспорт и импорт резервной копии появятся в следующем обновлении.</string>
     <string name="status_granted">Разрешено</string>
     <string name="status_denied">Не разрешено</string>
+    <string name="settings_version">Версия: %1$s</string>
 </resources>

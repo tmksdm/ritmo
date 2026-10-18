@@ -20,6 +20,8 @@ class SettingsActivity : Activity() {
 
         notificationsStatus = findViewById(R.id.notifications_status)
         exactAlarmStatus = findViewById(R.id.exact_alarm_status)
+        findViewById<TextView>(R.id.version_value).text =
+            getString(R.string.settings_version, BuildConfig.VERSION_NAME)
 
         findViewById<Button>(R.id.open_notification_settings).setOnClickListener {
             AlarmScheduler.openAppNotificationSettings(this)
