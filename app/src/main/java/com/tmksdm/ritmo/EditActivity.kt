@@ -14,7 +14,7 @@ import java.util.Calendar
 class EditActivity : Activity() {
 
     private lateinit var titleInput: EditText
-    private lateinit var scheduleButton: Button
+    private lateinit var scheduleValue: TextView
     private lateinit var dateButton: Button
     private lateinit var timeButton: Button
     private val calendar: Calendar = Calendar.getInstance()
@@ -25,7 +25,7 @@ class EditActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit)
         titleInput = findViewById(R.id.title_input)
-        scheduleButton = findViewById(R.id.schedule_value)
+        scheduleValue = findViewById(R.id.schedule_value)
         dateButton = findViewById(R.id.date_button)
         timeButton = findViewById(R.id.time_button)
 
@@ -92,7 +92,7 @@ class EditActivity : Activity() {
         calendar.set(Calendar.MILLISECOND, 0)
         dateButton.text = getString(R.string.date_button, Formats.day(calendar.timeInMillis))
         timeButton.text = getString(R.string.time_button, Formats.time(calendar.timeInMillis))
-        scheduleButton.text = getString(R.string.schedule_value, Formats.dateTime(calendar.timeInMillis))
+        scheduleValue.text = getString(R.string.schedule_value, Formats.dateTime(calendar.timeInMillis))
     }
 
     private fun save() {
