@@ -10,7 +10,8 @@ enum class RepeatType {
     DAILY,
     WEEKLY,
     MONTHLY,
-    EVERY_N_DAYS;
+    EVERY_N_DAYS,
+    YEARLY;
 
     companion object {
         fun fromName(name: String?): RepeatType = entries.firstOrNull { it.name == name } ?: ONCE
@@ -34,11 +35,15 @@ data class Reminder(
     /** Дни недели в значениях [java.util.Calendar.DAY_OF_WEEK]. */
     var daysOfWeek: MutableSet<Int> = mutableSetOf(),
     var dayOfMonth: Int = 1,
+    /** Месяц для YEARLY: 1 — январь, 12 — декабрь. */
+    var monthOfYear: Int = 1,
     var everyNDays: Int = 3,
     var windowEnabled: Boolean = false,
     var windowStartMinutes: Int = 9 * 60,
     var windowEndMinutes: Int = 21 * 60,
-    var lastTriggeredAt: Long = 0L
+    var lastTriggeredAt: Long = 0L,
+    /** Название группы; null — напоминание вне групп. */
+    var group: String? = null
 ) {
     /** Ближайшее срабатывание или null, если его не будет. */
     fun nextTriggerAt(now: Long = System.currentTimeMillis()): Long? = Schedules.nextTrigger(this, now)
@@ -51,7 +56,7 @@ data class Reminder(
 
         RepeatType.DAILY -> true
         RepeatType.WEEKLY -> daysOfWeek.isNotEmpty()
-        RepeatType.MONTHLY -> dayOfMonth in 1..31
+        RepeatType.MONTHLY, RepeatType.YEARLY -> dayOfMonth in 1..31
     }
 
     /**
@@ -76,6 +81,7 @@ data class Reminder(
         hour = hour.coerceIn(0, 23)
         minute = minute.coerceIn(0, 59)
         dayOfMonth = dayOfMonth.coerceIn(1, 31)
+        monthOfYear = monthOfYear.coerceIn(1, 12)
         everyNDays = everyNDays.coerceIn(1, MAX_EVERY_N_DAYS)
         windowStartMinutes = windowStartMinutes.coerceIn(0, 24 * 60 - 1)
         windowEndMinutes = windowEndMinutes.coerceIn(0, 24 * 60 - 1)
@@ -83,6 +89,7 @@ data class Reminder(
         daysOfWeek = daysOfWeek.filter { it in 1..7 }.toMutableSet()
         if (lastTriggeredAt < 0) lastTriggeredAt = 0
         if (dateTimeMillis < 0) dateTimeMillis = 0
+        group = group?.trim()?.takeIf { it.isNotEmpty() }
     }
 
     fun toJson(): JSONObject = JSONObject().apply {
@@ -96,11 +103,13 @@ data class Reminder(
         put("minute", minute)
         put("daysOfWeek", JSONArray(daysOfWeek.sorted()))
         put("dayOfMonth", dayOfMonth)
+        put("monthOfYear", monthOfYear)
         put("everyNDays", everyNDays)
         put("windowEnabled", windowEnabled)
         put("windowStartMinutes", windowStartMinutes)
         put("windowEndMinutes", windowEndMinutes)
         put("lastTriggeredAt", lastTriggeredAt)
+        if (group != null) put("group", group)
     }
 
     companion object {
@@ -120,11 +129,13 @@ data class Reminder(
             minute = json.optInt("minute", 0),
             daysOfWeek = json.optJSONArray("daysOfWeek").toDaySet(),
             dayOfMonth = json.optInt("dayOfMonth", 1),
+            monthOfYear = json.optInt("monthOfYear", 1),
             everyNDays = json.optInt("everyNDays", 3),
             windowEnabled = json.optBoolean("windowEnabled", false),
             windowStartMinutes = json.optInt("windowStartMinutes", 9 * 60),
             windowEndMinutes = json.optInt("windowEndMinutes", 21 * 60),
-            lastTriggeredAt = json.optLong("lastTriggeredAt", 0L)
+            lastTriggeredAt = json.optLong("lastTriggeredAt", 0L),
+            group = json.optString("group").trim().takeIf { it.isNotEmpty() }
         )
 
         /** @throws org.json.JSONException если текст не является корректным списком напоминаний. */

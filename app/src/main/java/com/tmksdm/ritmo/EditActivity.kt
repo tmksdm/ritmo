@@ -39,6 +39,9 @@ class EditActivity : Activity() {
     private lateinit var weekDayChips: List<CheckBox>
     private lateinit var monthlyBlock: LinearLayout
     private lateinit var monthDayInput: EditText
+    private lateinit var yearlyBlock: LinearLayout
+    private lateinit var yearMonthSpinner: Spinner
+    private lateinit var yearDayInput: EditText
     private lateinit var intervalBlock: LinearLayout
     private lateinit var intervalInput: EditText
     private lateinit var intervalUnitGroup: RadioGroup
@@ -141,6 +144,9 @@ class EditActivity : Activity() {
         )
         monthlyBlock = findViewById(R.id.monthly_block)
         monthDayInput = findViewById(R.id.month_day_input)
+        yearlyBlock = findViewById(R.id.yearly_block)
+        yearMonthSpinner = findViewById(R.id.year_month_spinner)
+        yearDayInput = findViewById(R.id.year_day_input)
         intervalBlock = findViewById(R.id.interval_block)
         intervalInput = findViewById(R.id.interval_input)
         intervalUnitGroup = findViewById(R.id.interval_unit_group)
@@ -168,10 +174,15 @@ class EditActivity : Activity() {
             android.R.layout.simple_spinner_item,
             resources.getStringArray(R.array.repeat_types)
         ).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+        yearMonthSpinner.adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            resources.getStringArray(R.array.months_genitive)
+        ).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
     }
 
     private fun setUpNumericInputs() {
-        listOf(monthDayInput, everyDaysInput, intervalInput).forEach { input ->
+        listOf(monthDayInput, yearDayInput, everyDaysInput, intervalInput).forEach { input ->
             input.addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
@@ -182,6 +193,7 @@ class EditActivity : Activity() {
             })
         }
         clampOnBlur(monthDayInput, 1, MONTH_DAY_MAX)
+        clampOnBlur(yearDayInput, 1, MONTH_DAY_MAX)
         clampOnBlur(everyDaysInput, 1, EVERY_DAYS_MAX)
         intervalInput.setOnFocusChangeListener { _, hasFocus -> if (!hasFocus) clampIntervalInput() }
         intervalUnitGroup.setOnCheckedChangeListener { _, _ ->
@@ -228,6 +240,8 @@ class EditActivity : Activity() {
         val id = intent.getLongExtra(EXTRA_ID, 0L)
         if (id == 0L) {
             monthDayInput.setText(DEFAULT_MONTH_DAY.toString())
+            yearMonthSpinner.setSelection(calendar.get(Calendar.MONTH))
+            yearDayInput.setText(calendar.get(Calendar.DAY_OF_MONTH).toString())
             everyDaysInput.setText(DEFAULT_EVERY_DAYS.toString())
             intervalInput.setText(DEFAULT_INTERVAL_MINUTES.toString())
             return
@@ -246,6 +260,8 @@ class EditActivity : Activity() {
             chip.isChecked = reminder.daysOfWeek.contains(Formats.calendarDayOfWeek(index))
         }
         monthDayInput.setText(reminder.dayOfMonth.coerceIn(1, MONTH_DAY_MAX).toString())
+        yearMonthSpinner.setSelection((reminder.monthOfYear - 1).coerceIn(0, 11))
+        yearDayInput.setText(reminder.dayOfMonth.coerceIn(1, MONTH_DAY_MAX).toString())
         everyDaysInput.setText(reminder.everyNDays.coerceIn(1, EVERY_DAYS_MAX).toString())
         val wholeHours = reminder.intervalMinutes >= 60 && reminder.intervalMinutes % 60 == 0
         intervalUnitGroup.check(if (wholeHours) R.id.interval_unit_hours else R.id.interval_unit_minutes)
@@ -293,6 +309,14 @@ class EditActivity : Activity() {
                 updatePreview()
                 scheduleAutosave(0L)
             }
+        }
+        yearMonthSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                updatePreview()
+                scheduleAutosave(0L)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
         }
         windowSwitch.setOnCheckedChangeListener { _, _ ->
             updateNote()
@@ -430,12 +454,17 @@ class EditActivity : Activity() {
             RepeatType.ONCE, RepeatType.EVERY_N_DAYS -> calendar.timeInMillis
             else -> 0L
         }
+        if (type == RepeatType.YEARLY) target.monthOfYear = yearMonthSpinner.selectedItemPosition + 1
         if (type == RepeatType.WEEKLY) {
             target.daysOfWeek = weekDayChips.mapIndexedNotNull { index, chip ->
                 if (chip.isChecked) Formats.calendarDayOfWeek(index) else null
             }.toMutableSet()
         }
-        target.dayOfMonth = numberOrDefault(monthDayInput, 1, MONTH_DAY_MAX, DEFAULT_MONTH_DAY)
+        target.dayOfMonth = if (type == RepeatType.YEARLY) {
+            numberOrDefault(yearDayInput, 1, MONTH_DAY_MAX, DEFAULT_MONTH_DAY)
+        } else {
+            numberOrDefault(monthDayInput, 1, MONTH_DAY_MAX, DEFAULT_MONTH_DAY)
+        }
         target.everyNDays = numberOrDefault(everyDaysInput, 1, EVERY_DAYS_MAX, DEFAULT_EVERY_DAYS)
         target.intervalMinutes = if (hoursSelected) {
             numberOrDefault(intervalInput, 1, HOURS_MAX, 1) * 60
@@ -456,11 +485,12 @@ class EditActivity : Activity() {
             View.GONE
         }
         timeBlock.visibility = when (type) {
-            RepeatType.DAILY, RepeatType.WEEKLY, RepeatType.MONTHLY -> View.VISIBLE
+            RepeatType.DAILY, RepeatType.WEEKLY, RepeatType.MONTHLY, RepeatType.YEARLY -> View.VISIBLE
             else -> View.GONE
         }
         weeklyBlock.visibility = if (type == RepeatType.WEEKLY) View.VISIBLE else View.GONE
         monthlyBlock.visibility = if (type == RepeatType.MONTHLY) View.VISIBLE else View.GONE
+        yearlyBlock.visibility = if (type == RepeatType.YEARLY) View.VISIBLE else View.GONE
         intervalBlock.visibility = if (type == RepeatType.INTERVAL) View.VISIBLE else View.GONE
         everyNBlock.visibility = if (type == RepeatType.EVERY_N_DAYS) View.VISIBLE else View.GONE
         presetsBlock.visibility = if (type == RepeatType.ONCE) View.VISIBLE else View.GONE
@@ -533,8 +563,11 @@ class EditActivity : Activity() {
                 else -> null
             }
 
-            reminder.repeatType == RepeatType.MONTHLY ->
-                if (numberOrNull(monthDayInput)?.let { it in 1..MONTH_DAY_MAX } == true) {
+            reminder.repeatType == RepeatType.MONTHLY ||
+                reminder.repeatType == RepeatType.YEARLY ->
+                if (numberOrNull(if (reminder.repeatType == RepeatType.YEARLY) yearDayInput else monthDayInput)
+                        ?.let { it in 1..MONTH_DAY_MAX } == true
+                ) {
                     null
                 } else {
                     getString(R.string.error_number_range, 1, MONTH_DAY_MAX)

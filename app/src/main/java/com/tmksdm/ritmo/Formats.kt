@@ -123,6 +123,19 @@ object Formats {
             reminder.everyNDays,
             timeOfDay(reminder.hour, reminder.minute)
         )
+
+        RepeatType.YEARLY -> context.getString(
+            R.string.repeat_yearly_date,
+            yearlyDate(context, reminder.monthOfYear, reminder.dayOfMonth),
+            timeOfDay(reminder.hour, reminder.minute)
+        )
+    }
+
+    /** «29 февраля» — день и месяц без года. */
+    fun yearlyDate(context: Context, month: Int, day: Int): String {
+        val months = context.resources.getStringArray(R.array.months_genitive)
+        val monthName = months.getOrElse(month - 1) { months.first() }
+        return "$day $monthName"
     }
 
     /** Список выбранных дней недели: «Пн, Ср, Пт». */

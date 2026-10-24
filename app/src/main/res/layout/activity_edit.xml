@@ -348,6 +348,64 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- Ежегодно: месяц и день. -->
+            <LinearLayout
+                android:id="@+id/yearly_block"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/Widget.Ritmo.SectionLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="@string/yearly_date_label" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <Spinner
+                        android:id="@+id/year_month_spinner"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/field_background_select"
+                        android:minHeight="44dp"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="38dp" />
+
+                    <EditText
+                        android:id="@+id/year_day_input"
+                        android:layout_width="64dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/field_background"
+                        android:gravity="center"
+                        android:hint="@string/yearly_day_hint"
+                        android:importantForAutofill="no"
+                        android:inputType="number"
+                        android:maxLength="2"
+                        android:minHeight="44dp"
+                        android:textColor="?attr/ritmoTextPrimary"
+                        android:textColorHint="?attr/ritmoTextSecondary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/yearly_day_suffix"
+                        android:textColor="?attr/ritmoTextSecondary"
+                        android:textSize="14sp" />
+                </LinearLayout>
+            </LinearLayout>
+
             <!-- Через интервалы: шаг и необязательное окно. -->
             <LinearLayout
                 android:id="@+id/interval_block"

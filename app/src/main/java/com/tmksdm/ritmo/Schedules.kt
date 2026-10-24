@@ -19,6 +19,7 @@ object Schedules {
         RepeatType.WEEKLY -> nextWeekly(reminder, now)
         RepeatType.MONTHLY -> nextMonthly(reminder, now)
         RepeatType.EVERY_N_DAYS -> nextEveryNDays(reminder, now)
+        RepeatType.YEARLY -> nextYearly(reminder, now)
     }
 
     /** Каждые N минут или часов. Без окна — круглосуточно, с окном — только внутри него. */
@@ -78,6 +79,27 @@ object Schedules {
             val candidate = Calendar.getInstance().apply {
                 clear()
                 set(year, month + offset, 1, reminder.hour, reminder.minute, 0)
+            }
+            val lastDay = candidate.getActualMaximum(Calendar.DAY_OF_MONTH)
+            candidate.set(Calendar.DAY_OF_MONTH, reminder.dayOfMonth.coerceIn(1, lastDay))
+            if (candidate.timeInMillis > now) return candidate.timeInMillis
+        }
+        return null
+    }
+
+    /**
+     * Ежегодно в выбранные месяц и день. Если такого числа в месяце нет, используется
+     * последний день месяца. 29 февраля срабатывает 28 февраля в невисокосный год
+     * и снова 29 февраля в високосный.
+     */
+    fun nextYearly(reminder: Reminder, now: Long): Long? {
+        val month = reminder.monthOfYear.coerceIn(1, 12) - 1
+        val cursor = Calendar.getInstance().apply { timeInMillis = now }
+        val year = cursor.get(Calendar.YEAR)
+        repeat(3) { offset ->
+            val candidate = Calendar.getInstance().apply {
+                clear()
+                set(year + offset, month, 1, reminder.hour, reminder.minute, 0)
             }
             val lastDay = candidate.getActualMaximum(Calendar.DAY_OF_MONTH)
             candidate.set(Calendar.DAY_OF_MONTH, reminder.dayOfMonth.coerceIn(1, lastDay))

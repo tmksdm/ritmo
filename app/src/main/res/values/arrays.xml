@@ -8,6 +8,23 @@
         <item>Еженедельно</item>
         <item>Ежемесячно</item>
         <item>Каждые N дней</item>
+        <item>Ежегодно</item>
+    </string-array>
+
+    <!-- Порядок: январь — декабрь. -->
+    <string-array name="months_genitive">
+        <item>января</item>
+        <item>февраля</item>
+        <item>марта</item>
+        <item>апреля</item>
+        <item>мая</item>
+        <item>июня</item>
+        <item>июля</item>
+        <item>августа</item>
+        <item>сентября</item>
+        <item>октября</item>
+        <item>ноября</item>
+        <item>декабря</item>
     </string-array>
 
     <!-- Порядок: понедельник — воскресенье. -->

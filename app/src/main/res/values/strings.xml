@@ -41,6 +41,9 @@
     <string name="monthly_day_label">День месяца</string>
     <string name="month_day_hint">15</string>
     <string name="month_day_suffix">числа месяца</string>
+    <string name="yearly_date_label">Дата</string>
+    <string name="yearly_day_hint">15</string>
+    <string name="yearly_day_suffix">число</string>
     <string name="every_n_days_label">Повторять каждые N дней</string>
     <string name="every_n_days_hint">3</string>
     <string name="every_n_days_suffix">дней</string>
@@ -61,6 +64,25 @@
     <string name="action_edit">Изменить</string>
     <string name="delete_title">Удалить напоминание?</string>
     <string name="delete_message">«%1$s» будет удалено. Это действие нельзя отменить.</string>
+
+    <!-- Группы -->
+    <string name="group_ungrouped">Без группы</string>
+    <string name="group_move">Переместить в группу</string>
+    <string name="group_move_title">Группа напоминания</string>
+    <string name="group_new">Новая группа…</string>
+    <string name="group_new_title">Новая группа</string>
+    <string name="group_rename_title">Переименовать группу</string>
+    <string name="group_name_hint">Название группы</string>
+    <string name="group_delete_title">Удалить группу?</string>
+    <string name="group_delete_message">Группа «%1$s» будет удалена. Напоминания останутся в списке без группы.</string>
+    <string name="group_exists">Группа с таким названием уже есть</string>
+    <string name="group_empty_name">Введите название группы</string>
+    <string name="group_current">✓ %1$s</string>
+    <string name="group_count">%1$d</string>
+    <string name="group_collapse">Свернуть группу</string>
+    <string name="group_expand">Развернуть группу</string>
+    <string name="group_actions">Действия с группой</string>
+    <string name="group_rename">Переименовать</string>
 
     <string name="channel_name">Напоминания</string>
     <string name="channel_description">Уведомления о напоминаниях Ritmo</string>
@@ -85,6 +107,7 @@
     <string name="repeat_weekly_days">По %1$s в %2$s</string>
     <string name="repeat_monthly_day">Ежемесячно, %1$d числа в %2$s</string>
     <string name="repeat_every_n_days_at">Каждые %1$d дн. в %2$s</string>
+    <string name="repeat_yearly_date">Ежегодно, %1$s в %2$s</string>
     <string name="repeat_every_minutes">Каждые %1$d мин.</string>
     <string name="repeat_every_hours">Каждые %1$d ч.</string>
     <string name="repeat_interval_window">%1$s, с %2$s до %3$s</string>
