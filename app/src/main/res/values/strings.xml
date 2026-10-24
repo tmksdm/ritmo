@@ -82,6 +82,7 @@
     <string name="group_collapse">Свернуть группу</string>
     <string name="group_expand">Развернуть группу</string>
     <string name="group_actions">Действия с группой</string>
+    <string name="group_actions_named">Действия с группой «%1$s»</string>
     <string name="group_rename">Переименовать</string>
 
     <string name="channel_name">Напоминания</string>

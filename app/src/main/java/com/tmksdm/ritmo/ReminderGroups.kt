@@ -21,6 +21,8 @@ data class ReminderList(
  */
 object ReminderGroups {
 
+    private val GROUP_SUFFIX = Regex("""^(.*) \((\d+)\)$""")
+
     /**
      * Активные — по ближайшему срабатыванию, затем выключенные, затем завершённые;
      * при равенстве — по названию и id, чтобы порядок был стабильным.
@@ -88,6 +90,39 @@ object ReminderGroups {
             )
         )
         return ReminderList(grouped = true, sections = sections)
+    }
+
+    /**
+     * Проверяет, занято ли название реальной группой или названием секции без группы.
+     * [ungroupedName] = null, когда проверяется само название секции.
+     */
+    fun nameIsTaken(
+        name: String,
+        groups: Collection<String>,
+        ungroupedName: String?
+    ): Boolean {
+        val value = name.trim()
+        if (value.isEmpty()) return true
+        if (groups.any { it.equals(value, ignoreCase = true) }) return true
+        return !ungroupedName.isNullOrBlank() && ungroupedName.trim().equals(value, ignoreCase = true)
+    }
+
+    /**
+     * Свободное отображаемое название секции без группы. Если базовое имя занято
+     * реальной группой, детерминированно добавляется суффикс « (2)», « (3)» и т. д.
+     * Сравнение регистронезависимое; реальные группы при этом не меняются.
+     */
+    fun freeUngroupedName(base: String, groups: Collection<String>): String {
+        val value = base.trim()
+        if (!nameIsTaken(value, groups, null)) return value
+        val match = GROUP_SUFFIX.matchEntire(value)
+        val stem = match?.groupValues?.get(1)?.trim()?.takeIf { it.isNotEmpty() } ?: value
+        var suffix = (match?.groupValues?.get(2)?.toIntOrNull() ?: 1) + 1
+        while (true) {
+            val candidate = "$stem ($suffix)"
+            if (!nameIsTaken(candidate, groups, null)) return candidate
+            suffix++
+        }
     }
 
     /** Ближайшее будущее срабатывание среди включённых напоминаний. */

@@ -15,6 +15,7 @@ object Groups {
     private const val FILE_NAME = "groups.json"
     private const val PREFS = "ritmo_groups"
     private const val KEY_EXPANDED = "expanded:"
+    private const val KEY_UNGROUPED_NAME = "ungrouped_name"
 
     fun load(context: Context): MutableList<String> {
         val file = atomicFile(context)
@@ -61,6 +62,39 @@ object Groups {
         if (names.any { it.equals(name, ignoreCase = true) }) return false
         names.add(name)
         return true
+    }
+
+    /**
+     * Отображаемое название секции без группы. Внутреннее назначение остаётся null,
+     * поэтому сортировка и данные напоминаний не зависят от этого названия.
+     */
+    fun ungroupedName(context: Context): String =
+        prefs(context).getString(KEY_UNGROUPED_NAME, null)
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+            ?: context.getString(R.string.group_ungrouped)
+
+    /**
+     * Возвращает отображаемое название секции без группы, разрешая конфликт с реальными
+     * группами из старых данных или импорта. Найденный свободный вариант сохраняется,
+     * поэтому при следующих загрузках имя не меняется.
+     */
+    fun resolveUngroupedName(context: Context, groups: Collection<String>): String {
+        val current = ungroupedName(context)
+        val resolved = ReminderGroups.freeUngroupedName(current, groups)
+        if (resolved != current) setUngroupedName(context, resolved)
+        return resolved
+    }
+
+    fun setUngroupedName(context: Context, name: String) {
+        val value = name.trim()
+        val editor = prefs(context).edit()
+        if (value == context.getString(R.string.group_ungrouped)) {
+            editor.remove(KEY_UNGROUPED_NAME)
+        } else {
+            editor.putString(KEY_UNGROUPED_NAME, value)
+        }
+        editor.apply()
     }
 
     fun isExpanded(context: Context, group: String?): Boolean =

@@ -73,6 +73,9 @@ object Backup {
             if (Groups.addName(groups, group)) groupsChanged = true
         }
         if (groupsChanged) Groups.save(context, groups)
+        // Импорт мог принести группу с именем секции без группы — разрешаем конфликт
+        // отображаемого имени, не переименовывая реальные группы.
+        Groups.resolveUngroupedName(context, groups)
         (previous + imported).distinctBy { it.id }.forEach { AlarmScheduler.cancel(context, it) }
         imported.filter { it.enabled }.forEach { AlarmScheduler.schedule(context, it) }
         return true

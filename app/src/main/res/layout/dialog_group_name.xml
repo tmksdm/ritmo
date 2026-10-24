@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Общий вид поля для диалогов группы: отступы контейнера совпадают с заголовком. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="?android:attr/dialogPreferredPadding"
+    android:paddingEnd="?android:attr/dialogPreferredPadding"
+    android:paddingTop="8dp">
+
+    <EditText
+        android:id="@+id/group_name_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/group_name_hint"
+        android:imeOptions="actionDone"
+        android:importantForAutofill="no"
+        android:inputType="textCapSentences"
+        android:maxLength="60"
+        android:minHeight="48dp"
+        android:paddingStart="0dp"
+        android:paddingEnd="0dp"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:textColor="?attr/ritmoTextPrimary"
+        android:textColorHint="?attr/ritmoTextSecondary"
+        android:textSize="16sp" />
+
+</LinearLayout>

@@ -14,6 +14,7 @@ import android.widget.TextView
 sealed class ReminderRow {
     data class Group(
         val name: String?,
+        val title: String,
         val count: Int,
         val expanded: Boolean
     ) : ReminderRow()
@@ -65,7 +66,7 @@ class ReminderAdapter(
         val view = convertView ?: LayoutInflater.from(context)
             .inflate(R.layout.item_group_header, parent, false)
         view.findViewById<TextView>(R.id.group_name).apply {
-            text = row.name ?: context.getString(R.string.group_ungrouped)
+            text = row.title
             setTextColor(context.themeColor(R.attr.ritmoTextPrimary))
         }
         view.findViewById<TextView>(R.id.group_count).apply {
@@ -79,8 +80,9 @@ class ReminderAdapter(
             )
         }
         val menu = view.findViewById<ImageButton>(R.id.group_menu)
-        // У «Без группы» нет имени: переименовывать и удалять нечего.
-        menu.visibility = if (row.name == null) View.GONE else View.VISIBLE
+        // Меню есть и у секции без группы: там доступно переименование названия.
+        menu.visibility = View.VISIBLE
+        menu.contentDescription = context.getString(R.string.group_actions_named, row.title)
         menu.setOnClickListener { anchor -> onGroupMenu(row.name, anchor) }
         view.setOnClickListener { onToggleGroup(row.name) }
         return view

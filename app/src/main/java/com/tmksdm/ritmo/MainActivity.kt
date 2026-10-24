@@ -1,11 +1,11 @@
 package com.tmksdm.ritmo
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.text.InputFilter
 import android.view.Menu
 import android.view.View
 import android.widget.Button
@@ -22,6 +22,7 @@ class MainActivity : Activity() {
     private lateinit var adapter: ReminderAdapter
     private var reminders: MutableList<Reminder> = mutableListOf()
     private var definedGroups: MutableList<String> = mutableListOf()
+    private var ungroupedDisplayName: String = ""
     private var exactAlarmDialogShown = false
     private var lastExactAlarmState: Boolean? = null
     private var appliedTheme = 0
@@ -75,6 +76,7 @@ class MainActivity : Activity() {
     private fun reload() {
         reminders = ReminderStore.load(this)
         definedGroups = Groups.load(this).toMutableList()
+        ungroupedDisplayName = Groups.resolveUngroupedName(this, groupNames())
         val list = ReminderGroups.buildList(
             reminders,
             definedGroups,
@@ -87,7 +89,14 @@ class MainActivity : Activity() {
     private fun rowsFor(list: ReminderList): List<ReminderRow> = buildList {
         for (section in list.sections) {
             if (list.grouped) {
-                add(ReminderRow.Group(section.name, section.reminders.size, section.expanded))
+                add(
+                    ReminderRow.Group(
+                        name = section.name,
+                        title = section.name ?: ungroupedSectionName(),
+                        count = section.reminders.size,
+                        expanded = section.expanded
+                    )
+                )
             }
             if (!list.grouped || section.expanded) {
                 section.reminders.forEach { add(ReminderRow.Item(it)) }
@@ -164,10 +173,13 @@ class MainActivity : Activity() {
             .show()
     }
 
-    /** Диалог перемещения: «Без группы», существующие группы и создание новой. */
+    /** Диалог перемещения: секция без группы, существующие группы и создание новой. */
     private fun showMoveDialog(reminder: Reminder) {
         val groups = groupNames()
-        val labels = mutableListOf(getString(R.string.group_ungrouped))
+        val ungrouped = ungroupedSectionName()
+        val labels = mutableListOf(
+            if (reminder.group == null) getString(R.string.group_current, ungrouped) else ungrouped
+        )
         labels += groups.map { name ->
             if (name == reminder.group) getString(R.string.group_current, name) else name
         }
@@ -205,32 +217,34 @@ class MainActivity : Activity() {
     }
 
     private fun promptNewGroup(onName: (String) -> Unit) {
-        val input = groupNameInput("")
+        val (view, input) = groupNameDialog("")
         AlertDialog.Builder(this)
             .setTitle(R.string.group_new_title)
-            .setView(input)
+            .setView(view)
             .setNegativeButton(R.string.cancel, null)
             .setPositiveButton(android.R.string.ok) { _, _ ->
                 val name = input.text.toString().trim()
-                if (name.isEmpty()) {
-                    Toast.makeText(this, R.string.group_empty_name, Toast.LENGTH_SHORT).show()
-                    return@setPositiveButton
+                when {
+                    name.isEmpty() ->
+                        Toast.makeText(this, R.string.group_empty_name, Toast.LENGTH_SHORT).show()
+
+                    ReminderGroups.nameIsTaken(
+                        name,
+                        groupNames(),
+                        ungroupedSectionName()
+                    ) -> Toast.makeText(this, R.string.group_exists, Toast.LENGTH_SHORT).show()
+
+                    else -> onName(name)
                 }
-                if (name.equals(getString(R.string.group_ungrouped), ignoreCase = true)) {
-                    Toast.makeText(this, R.string.group_exists, Toast.LENGTH_SHORT).show()
-                    return@setPositiveButton
-                }
-                // Если группа уже есть, используем её каноническое название.
-                onName(groupNames().firstOrNull { it.equals(name, ignoreCase = true) } ?: name)
             }
             .show()
     }
 
     private fun showGroupMenu(group: String?, anchor: View) {
-        if (group == null) return
         val popup = PopupMenu(this, anchor)
         popup.menu.add(Menu.NONE, MENU_RENAME_GROUP, 0, R.string.group_rename)
-        popup.menu.add(Menu.NONE, MENU_DELETE_GROUP, 1, R.string.delete)
+        // У специальной секции без группы удалять нечего: доступно только переименование.
+        if (group != null) popup.menu.add(Menu.NONE, MENU_DELETE_GROUP, 1, R.string.delete)
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 MENU_RENAME_GROUP -> {
@@ -239,7 +253,7 @@ class MainActivity : Activity() {
                 }
 
                 MENU_DELETE_GROUP -> {
-                    confirmDeleteGroup(group)
+                    group?.let { confirmDeleteGroup(it) }
                     true
                 }
 
@@ -249,28 +263,48 @@ class MainActivity : Activity() {
         popup.show()
     }
 
-    private fun promptRenameGroup(oldName: String) {
-        val input = groupNameInput(oldName)
+    private fun promptRenameGroup(oldName: String?) {
+        val (view, input) = groupNameDialog(oldName ?: ungroupedSectionName())
         AlertDialog.Builder(this)
             .setTitle(R.string.group_rename_title)
-            .setView(input)
+            .setView(view)
             .setNegativeButton(R.string.cancel, null)
             .setPositiveButton(android.R.string.ok) { _, _ ->
                 val name = input.text.toString().trim()
+                val conflict = if (oldName == null) {
+                    ReminderGroups.nameIsTaken(name, groupNames(), null)
+                } else {
+                    ReminderGroups.nameIsTaken(
+                        name,
+                        groupNames().filterNot { it.equals(oldName, true) },
+                        ungroupedSectionName()
+                    )
+                }
                 when {
                     name.isEmpty() ->
                         Toast.makeText(this, R.string.group_empty_name, Toast.LENGTH_SHORT).show()
 
-                    name.equals(getString(R.string.group_ungrouped), ignoreCase = true) ->
+                    conflict ->
                         Toast.makeText(this, R.string.group_exists, Toast.LENGTH_SHORT).show()
 
-                    groupNames().any { !it.equals(oldName, true) && it.equals(name, true) } ->
-                        Toast.makeText(this, R.string.group_exists, Toast.LENGTH_SHORT).show()
+                    oldName == null -> {
+                        Groups.setUngroupedName(this, name)
+                        reload()
+                    }
 
                     else -> renameGroup(oldName, name)
                 }
             }
             .show()
+    }
+
+    /** Общий вид диалога: отступы контейнера совпадают с заголовком, поле выделяет текст. */
+    @SuppressLint("InflateParams")
+    private fun groupNameDialog(value: String): Pair<View, EditText> {
+        val view = layoutInflater.inflate(R.layout.dialog_group_name, null)
+        val input = view.findViewById<EditText>(R.id.group_name_input)
+        input.setText(value)
+        return view to input
     }
 
     /** Переименование меняет только название группы у её напоминаний. */
@@ -318,19 +352,15 @@ class MainActivity : Activity() {
         reload()
     }
 
+    private fun ungroupedSectionName(): String =
+        ungroupedDisplayName.ifEmpty { Groups.ungroupedName(this) }
+
     /** Все группы: сохранённые и добавленные назначениями из резервной копии. */
     private fun groupNames(): List<String> {
         val names = mutableListOf<String>()
         definedGroups.forEach { GroupStoreSupport.add(names, it) }
         reminders.forEach { reminder -> reminder.group?.let { GroupStoreSupport.add(names, it) } }
         return names
-    }
-
-    private fun groupNameInput(value: String): EditText = EditText(this).apply {
-        hint = getString(R.string.group_name_hint)
-        filters = arrayOf(InputFilter.LengthFilter(MAX_GROUP_NAME_LENGTH))
-        setText(value)
-        setSelection(text.length)
     }
 
     private fun handleExactAlarmState() {
@@ -369,7 +399,6 @@ class MainActivity : Activity() {
         const val MENU_DELETE = 3
         const val MENU_RENAME_GROUP = 4
         const val MENU_DELETE_GROUP = 5
-        const val MAX_GROUP_NAME_LENGTH = 60
     }
 }
 
