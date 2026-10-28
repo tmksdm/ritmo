@@ -64,18 +64,16 @@ object Backup {
     fun restore(context: Context, imported: List<Reminder>): Boolean {
         val previous = ReminderStore.load(context)
         if (!ReminderStore.save(context, imported)) return false
-        // Названия групп хранятся в самих напоминаниях, поэтому после импорта
-        // достаточно добавить недостающие названия в список групп.
-        val groups = Groups.load(context)
-        var groupsChanged = false
+        // Определения тегов хранятся отдельно; принадлежность — в напоминаниях.
+        // После импорта добавляем недостающие названия, не удаляя существующие.
+        val tags = Tags.load(context)
+        var tagsChanged = false
         for (reminder in imported) {
-            val group = reminder.group ?: continue
-            if (Groups.addName(groups, group)) groupsChanged = true
+            for (tag in reminder.tags) {
+                if (TagNames.add(tags, tag)) tagsChanged = true
+            }
         }
-        if (groupsChanged) Groups.save(context, groups)
-        // Импорт мог принести группу с именем секции без группы — разрешаем конфликт
-        // отображаемого имени, не переименовывая реальные группы.
-        Groups.resolveUngroupedName(context, groups)
+        if (tagsChanged) Tags.save(context, tags)
         (previous + imported).distinctBy { it.id }.forEach { AlarmScheduler.cancel(context, it) }
         imported.filter { it.enabled }.forEach { AlarmScheduler.schedule(context, it) }
         return true

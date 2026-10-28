@@ -60,30 +60,29 @@
 
     <string name="delete">Удалить</string>
     <string name="cancel">Отмена</string>
+    <string name="close">Закрыть</string>
     <string name="item_actions">Действия с напоминанием</string>
     <string name="action_edit">Изменить</string>
     <string name="delete_title">Удалить напоминание?</string>
     <string name="delete_message">«%1$s» будет удалено. Это действие нельзя отменить.</string>
 
-    <!-- Группы -->
-    <string name="group_ungrouped">Без группы</string>
-    <string name="group_move">Переместить в группу</string>
-    <string name="group_move_title">Группа напоминания</string>
-    <string name="group_new">Новая группа…</string>
-    <string name="group_new_title">Новая группа</string>
-    <string name="group_rename_title">Переименовать группу</string>
-    <string name="group_name_hint">Название группы</string>
-    <string name="group_delete_title">Удалить группу?</string>
-    <string name="group_delete_message">Группа «%1$s» будет удалена. Напоминания останутся в списке без группы.</string>
-    <string name="group_exists">Группа с таким названием уже есть</string>
-    <string name="group_empty_name">Введите название группы</string>
-    <string name="group_current">✓ %1$s</string>
-    <string name="group_count">%1$d</string>
-    <string name="group_collapse">Свернуть группу</string>
-    <string name="group_expand">Развернуть группу</string>
-    <string name="group_actions">Действия с группой</string>
-    <string name="group_actions_named">Действия с группой «%1$s»</string>
-    <string name="group_rename">Переименовать</string>
+    <!-- Теги -->
+    <string name="tags_title">Теги</string>
+    <string name="tags_label">Теги</string>
+    <string name="tags_none_available">Тегов пока нет. Создайте их кнопкой «Теги» на главном экране.</string>
+    <string name="tag_new">Новый тег…</string>
+    <string name="tag_new_title">Новый тег</string>
+    <string name="tag_rename_title">Переименовать тег</string>
+    <string name="tag_name_hint">Название тега</string>
+    <string name="tag_rename">Переименовать</string>
+    <string name="tag_delete_title">Удалить тег?</string>
+    <string name="tag_delete_message">Тег «%1$s» будет снят со всех напоминаний. Сами напоминания останутся в списке.</string>
+    <string name="tag_exists">Тег с таким названием уже есть</string>
+    <string name="tag_empty_name">Введите название тега</string>
+    <string name="tag_filter_action">Фильтр по тегу «%1$s»</string>
+    <string name="tag_filter_active">Фильтр: %1$s</string>
+    <string name="tag_filter_reset">Сбросить</string>
+    <string name="empty_filter">Нет напоминаний с тегом «%1$s».\nНажмите «Сбросить», чтобы показать все.</string>
 
     <string name="channel_name">Напоминания</string>
     <string name="channel_description">Уведомления о напоминаниях Ritmo</string>

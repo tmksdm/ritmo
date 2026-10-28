@@ -1,95 +1,46 @@
 package com.tmksdm.ritmo
 
 import android.content.Context
+import android.util.TypedValue
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
+import android.widget.CheckBox
 import android.widget.ImageButton
-import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.Switch
 import android.widget.TextView
 
-/** Строка списка: заголовок группы или само напоминание. */
-sealed class ReminderRow {
-    data class Group(
-        val name: String?,
-        val title: String,
-        val count: Int,
-        val expanded: Boolean
-    ) : ReminderRow()
-
-    data class Item(val reminder: Reminder) : ReminderRow()
-}
-
-/** Список напоминаний: плоский или с разделами групп. */
+/** Единый список напоминаний: без секций групп, с тегами возле переключателя. */
 class ReminderAdapter(
     private val context: Context,
     private val onToggle: (Reminder, Boolean) -> Unit,
     private val onClick: (Reminder) -> Unit,
     private val onMenu: (Reminder, View) -> Unit,
-    private val onToggleGroup: (String?) -> Unit,
-    private val onGroupMenu: (String?, View) -> Unit
+    private val onTagClick: (String) -> Unit
 ) : BaseAdapter() {
 
-    private val rows = mutableListOf<ReminderRow>()
+    private var items: List<Reminder> = emptyList()
+    private var activeTag: String? = null
 
-    fun setRows(newRows: List<ReminderRow>) {
-        rows.clear()
-        rows.addAll(newRows)
+    fun setReminders(newItems: List<Reminder>, tag: String?) {
+        items = newItems
+        activeTag = tag
         notifyDataSetChanged()
     }
 
-    fun rowAt(position: Int): ReminderRow = rows[position]
+    fun reminderAt(position: Int): Reminder = items[position]
 
-    override fun getCount(): Int = rows.size
-    override fun getItem(position: Int): ReminderRow = rows[position]
-    override fun getItemId(position: Int): Long = when (val row = rows[position]) {
-        is ReminderRow.Item -> row.reminder.id
-        is ReminderRow.Group -> -(position + 1L)
-    }
+    override fun getCount(): Int = items.size
+    override fun getItem(position: Int): Reminder = items[position]
+    override fun getItemId(position: Int): Long = items[position].id
 
-    override fun getViewTypeCount(): Int = 2
-
-    override fun getItemViewType(position: Int): Int = when (rows[position]) {
-        is ReminderRow.Group -> TYPE_GROUP
-        is ReminderRow.Item -> TYPE_REMINDER
-    }
-
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View =
-        when (val row = rows[position]) {
-            is ReminderRow.Group -> groupView(row, convertView, parent)
-            is ReminderRow.Item -> reminderView(row.reminder, convertView, parent)
-        }
-
-    private fun groupView(row: ReminderRow.Group, convertView: View?, parent: ViewGroup): View {
-        val view = convertView ?: LayoutInflater.from(context)
-            .inflate(R.layout.item_group_header, parent, false)
-        view.findViewById<TextView>(R.id.group_name).apply {
-            text = row.title
-            setTextColor(context.themeColor(R.attr.ritmoTextPrimary))
-        }
-        view.findViewById<TextView>(R.id.group_count).apply {
-            text = context.getString(R.string.group_count, row.count)
-            setTextColor(context.themeColor(R.attr.ritmoTextSecondary))
-        }
-        view.findViewById<ImageView>(R.id.group_chevron).apply {
-            rotation = if (row.expanded) 90f else 0f
-            contentDescription = context.getString(
-                if (row.expanded) R.string.group_collapse else R.string.group_expand
-            )
-        }
-        val menu = view.findViewById<ImageButton>(R.id.group_menu)
-        // Меню есть и у секции без группы: там доступно переименование названия.
-        menu.visibility = View.VISIBLE
-        menu.contentDescription = context.getString(R.string.group_actions_named, row.title)
-        menu.setOnClickListener { anchor -> onGroupMenu(row.name, anchor) }
-        view.setOnClickListener { onToggleGroup(row.name) }
-        return view
-    }
-
-    private fun reminderView(reminder: Reminder, convertView: View?, parent: ViewGroup): View {
-        val view = convertView ?: LayoutInflater.from(context).inflate(R.layout.item_reminder, parent, false)
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+        val reminder = items[position]
+        val view = convertView
+            ?: LayoutInflater.from(context).inflate(R.layout.item_reminder, parent, false)
 
         val title = view.findViewById<TextView>(R.id.title)
         title.text = reminder.title
@@ -98,6 +49,12 @@ class ReminderAdapter(
             context.themeColor(if (reminder.enabled) R.attr.ritmoTextPrimary else R.attr.ritmoTextSecondary)
         )
         view.findViewById<TextView>(R.id.subtitle).text = Formats.subtitle(context, reminder)
+
+        bindTags(
+            view.findViewById(R.id.tags_scroll),
+            view.findViewById(R.id.tags_container),
+            reminder
+        )
 
         val toggle = view.findViewById<Switch>(R.id.enabled)
         toggle.setOnCheckedChangeListener(null)
@@ -111,8 +68,46 @@ class ReminderAdapter(
         return view
     }
 
-    private companion object {
-        const val TYPE_GROUP = 0
-        const val TYPE_REMINDER = 1
+    private fun bindTags(scroll: View, container: LinearLayout, reminder: Reminder) {
+        container.removeAllViews()
+        if (reminder.tags.isEmpty()) {
+            scroll.visibility = View.GONE
+            return
+        }
+        scroll.visibility = View.VISIBLE
+        reminder.tags.forEach { tag ->
+            container.addView(
+                tagChip(tag).apply {
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply { marginEnd = context.dp(6) }
+                }
+            )
+        }
     }
+
+    /**
+     * Тег — переключаемый чип в стиле дней недели. Нажатие включает или снимает
+     * фильтр; повторное нажатие выбранного тега сбрасывает его.
+     */
+    private fun tagChip(tag: String): CheckBox = CheckBox(context).apply {
+        text = tag
+        isChecked = TagNames.same(activeTag, tag)
+        setButtonDrawable(null)
+        background = context.getDrawable(R.drawable.segment_background)
+        setTextColor(context.resources.getColorStateList(R.color.chip_text, context.theme))
+        gravity = Gravity.CENTER
+        minHeight = context.dp(28)
+        setPadding(context.dp(8), 0, context.dp(8), 0)
+        setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+        contentDescription = context.getString(R.string.tag_filter_action, tag)
+        setOnClickListener { onTagClick(tag) }
+    }
+
+    private fun Context.dp(value: Int): Int = TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        value.toFloat(),
+        resources.displayMetrics
+    ).toInt()
 }

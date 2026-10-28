@@ -42,8 +42,8 @@ data class Reminder(
     var windowStartMinutes: Int = 9 * 60,
     var windowEndMinutes: Int = 21 * 60,
     var lastTriggeredAt: Long = 0L,
-    /** Название группы; null — напоминание вне групп. */
-    var group: String? = null
+    /** Теги напоминания; пустой список — без тегов. */
+    var tags: MutableList<String> = mutableListOf()
 ) {
     /** Ближайшее срабатывание или null, если его не будет. */
     fun nextTriggerAt(now: Long = System.currentTimeMillis()): Long? = Schedules.nextTrigger(this, now)
@@ -89,7 +89,7 @@ data class Reminder(
         daysOfWeek = daysOfWeek.filter { it in 1..7 }.toMutableSet()
         if (lastTriggeredAt < 0) lastTriggeredAt = 0
         if (dateTimeMillis < 0) dateTimeMillis = 0
-        group = group?.trim()?.takeIf { it.isNotEmpty() }
+        tags = TagNames.normalizeAll(tags)
     }
 
     fun toJson(): JSONObject = JSONObject().apply {
@@ -109,7 +109,7 @@ data class Reminder(
         put("windowStartMinutes", windowStartMinutes)
         put("windowEndMinutes", windowEndMinutes)
         put("lastTriggeredAt", lastTriggeredAt)
-        if (group != null) put("group", group)
+        put("tags", JSONArray(tags))
     }
 
     companion object {
@@ -135,7 +135,7 @@ data class Reminder(
             windowStartMinutes = json.optInt("windowStartMinutes", 9 * 60),
             windowEndMinutes = json.optInt("windowEndMinutes", 21 * 60),
             lastTriggeredAt = json.optLong("lastTriggeredAt", 0L),
-            group = json.optString("group").trim().takeIf { it.isNotEmpty() }
+            tags = json.optJSONArray("tags")?.toTagList() ?: legacyGroupTag(json)
         )
 
         /** @throws org.json.JSONException если текст не является корректным списком напоминаний. */
@@ -168,6 +168,19 @@ data class Reminder(
             val days = mutableSetOf<Int>()
             for (i in 0 until length()) days.add(optInt(i))
             return days
+        }
+
+        /** Старый формат хранил одну группу; она становится первым тегом. */
+        private fun legacyGroupTag(json: JSONObject): MutableList<String> {
+            val tags = mutableListOf<String>()
+            TagNames.add(tags, json.optString("group"))
+            return tags
+        }
+
+        private fun JSONArray.toTagList(): MutableList<String> {
+            val raw = mutableListOf<String>()
+            for (i in 0 until length()) raw.add(optString(i))
+            return TagNames.normalizeAll(raw)
         }
     }
 }

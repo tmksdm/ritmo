@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Общий вид поля для диалогов группы: отступы контейнера совпадают с заголовком. -->
+<!-- Общий вид поля для диалогов названия: отступы контейнера совпадают с заголовком. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -9,10 +9,10 @@
     android:paddingTop="8dp">
 
     <EditText
-        android:id="@+id/group_name_input"
+        android:id="@+id/name_input"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/group_name_hint"
+        android:hint="@string/tag_name_hint"
         android:imeOptions="actionDone"
         android:importantForAutofill="no"
         android:inputType="textCapSentences"

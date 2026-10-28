@@ -16,13 +16,16 @@ import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 
-/** Главный экран: список напоминаний, при наличии групп — разделы со сворачиванием. */
+/** Главный экран: единый список напоминаний, теги и фильтр по тегу. */
 class MainActivity : Activity() {
 
     private lateinit var adapter: ReminderAdapter
+    private lateinit var emptyView: TextView
+    private lateinit var filterBar: View
+    private lateinit var filterLabel: TextView
     private var reminders: MutableList<Reminder> = mutableListOf()
-    private var definedGroups: MutableList<String> = mutableListOf()
-    private var ungroupedDisplayName: String = ""
+    private var definedTags: MutableList<String> = mutableListOf()
+    private var activeTag: String? = null
     private var exactAlarmDialogShown = false
     private var lastExactAlarmState: Boolean? = null
     private var appliedTheme = 0
@@ -39,21 +42,23 @@ class MainActivity : Activity() {
             ::toggleReminder,
             ::editReminder,
             ::showItemMenu,
-            ::toggleGroup,
-            ::showGroupMenu
+            ::toggleTagFilter
         )
         val listView = findViewById<ListView>(R.id.reminder_list)
         listView.adapter = adapter
-        listView.emptyView = findViewById<TextView>(R.id.empty_view)
+        emptyView = findViewById(R.id.empty_view)
+        listView.emptyView = emptyView
         listView.setOnItemLongClickListener { _, _, position, _ ->
-            val row = adapter.rowAt(position)
-            if (row is ReminderRow.Item) {
-                confirmDelete(row.reminder)
-                true
-            } else {
-                false
-            }
+            confirmDelete(adapter.reminderAt(position))
+            true
         }
+        filterBar = findViewById(R.id.filter_bar)
+        filterLabel = findViewById(R.id.filter_label)
+        findViewById<View>(R.id.filter_reset).setOnClickListener {
+            activeTag = null
+            reload()
+        }
+        findViewById<View>(R.id.tags_button).setOnClickListener { showTagManager() }
         findViewById<Button>(R.id.add_button).setOnClickListener { editReminder(null) }
         findViewById<ImageButton>(R.id.settings_button).setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
@@ -75,33 +80,31 @@ class MainActivity : Activity() {
 
     private fun reload() {
         reminders = ReminderStore.load(this)
-        definedGroups = Groups.load(this).toMutableList()
-        ungroupedDisplayName = Groups.resolveUngroupedName(this, groupNames())
-        val list = ReminderGroups.buildList(
-            reminders,
-            definedGroups,
-            System.currentTimeMillis(),
-            { Groups.isExpanded(this, it) }
+        Tags.migrateLegacyGroups(this, reminders)
+        definedTags = Tags.all(this, reminders)
+        if (activeTag != null && !hasTag(activeTag!!)) activeTag = null
+
+        val visible = activeTag?.let { ReminderOrdering.withTag(reminders, it) } ?: reminders
+        adapter.setReminders(
+            ReminderOrdering.ordered(visible, System.currentTimeMillis()),
+            activeTag
         )
-        adapter.setRows(rowsFor(list))
+        filterBar.visibility = if (activeTag == null) View.GONE else View.VISIBLE
+        filterLabel.text = activeTag?.let { getString(R.string.tag_filter_active, it) }.orEmpty()
+        emptyView.text = if (activeTag != null && reminders.isNotEmpty()) {
+            getString(R.string.empty_filter, activeTag)
+        } else {
+            getString(R.string.empty_list)
+        }
     }
 
-    private fun rowsFor(list: ReminderList): List<ReminderRow> = buildList {
-        for (section in list.sections) {
-            if (list.grouped) {
-                add(
-                    ReminderRow.Group(
-                        name = section.name,
-                        title = section.name ?: ungroupedSectionName(),
-                        count = section.reminders.size,
-                        expanded = section.expanded
-                    )
-                )
-            }
-            if (!list.grouped || section.expanded) {
-                section.reminders.forEach { add(ReminderRow.Item(it)) }
-            }
-        }
+    private fun hasTag(tag: String): Boolean =
+        definedTags.any { TagNames.same(it, tag) } ||
+            reminders.any { TagNames.contains(it.tags, tag) }
+
+    private fun toggleTagFilter(tag: String) {
+        activeTag = if (TagNames.same(activeTag, tag)) null else tag
+        reload()
     }
 
     private fun editReminder(reminder: Reminder?) {
@@ -113,17 +116,11 @@ class MainActivity : Activity() {
     private fun showItemMenu(reminder: Reminder, anchor: View) {
         val popup = PopupMenu(this, anchor)
         popup.menu.add(Menu.NONE, MENU_EDIT, 0, R.string.action_edit)
-        popup.menu.add(Menu.NONE, MENU_MOVE, 1, R.string.group_move)
-        popup.menu.add(Menu.NONE, MENU_DELETE, 2, R.string.delete)
+        popup.menu.add(Menu.NONE, MENU_DELETE, 1, R.string.delete)
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 MENU_EDIT -> {
                     editReminder(reminder)
-                    true
-                }
-
-                MENU_MOVE -> {
-                    showMoveDialog(reminder)
                     true
                 }
 
@@ -173,126 +170,49 @@ class MainActivity : Activity() {
             .show()
     }
 
-    /** Диалог перемещения: секция без группы, существующие группы и создание новой. */
-    private fun showMoveDialog(reminder: Reminder) {
-        val groups = groupNames()
-        val ungrouped = ungroupedSectionName()
-        val labels = mutableListOf(
-            if (reminder.group == null) getString(R.string.group_current, ungrouped) else ungrouped
-        )
-        labels += groups.map { name ->
-            if (name == reminder.group) getString(R.string.group_current, name) else name
-        }
-        labels += getString(R.string.group_new)
+    /** Список тегов и создание нового; действия над тегом — во вложенном диалоге. */
+    private fun showTagManager() {
+        val tags = currentTags()
+        val labels = tags.toMutableList()
+        labels.add(getString(R.string.tag_new))
         AlertDialog.Builder(this)
-            .setTitle(R.string.group_move_title)
+            .setTitle(R.string.tags_title)
             .setItems(labels.toTypedArray()) { _, which ->
-                when {
-                    which == 0 -> assignGroup(reminder, null)
-                    which <= groups.size -> assignGroup(reminder, groups[which - 1])
-                    else -> promptNewGroup { name -> assignGroup(reminder, name) }
-                }
+                if (which == tags.size) promptTagName(null) else showTagActions(tags[which])
             }
+            .setNegativeButton(R.string.close, null)
             .show()
     }
 
-    private fun assignGroup(reminder: Reminder, rawName: String?) {
-        val old = reminder.group
-        val target = rawName?.trim()?.takeIf { it.isNotEmpty() }
-        if (old == target) {
-            reload()
-            return
-        }
-        reminder.group = target
-        if (!ReminderStore.save(this, reminders)) {
-            reminder.group = old
-            Toast.makeText(this, R.string.save_error, Toast.LENGTH_LONG).show()
-            reload()
-            return
-        }
-        if (target != null && definedGroups.none { it.equals(target, ignoreCase = true) }) {
-            GroupStoreSupport.addAndSave(this, definedGroups, target)
-        }
-        reload()
-    }
-
-    private fun promptNewGroup(onName: (String) -> Unit) {
-        val (view, input) = groupNameDialog("")
+    private fun showTagActions(tag: String) {
         AlertDialog.Builder(this)
-            .setTitle(R.string.group_new_title)
-            .setView(view)
-            .setNegativeButton(R.string.cancel, null)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                val name = input.text.toString().trim()
-                when {
-                    name.isEmpty() ->
-                        Toast.makeText(this, R.string.group_empty_name, Toast.LENGTH_SHORT).show()
-
-                    ReminderGroups.nameIsTaken(
-                        name,
-                        groupNames(),
-                        ungroupedSectionName()
-                    ) -> Toast.makeText(this, R.string.group_exists, Toast.LENGTH_SHORT).show()
-
-                    else -> onName(name)
+            .setTitle(tag)
+            .setItems(arrayOf(getString(R.string.tag_rename), getString(R.string.delete))) { _, which ->
+                when (which) {
+                    0 -> promptTagName(tag)
+                    1 -> confirmDeleteTag(tag)
                 }
             }
+            .setNegativeButton(R.string.cancel, null)
             .show()
     }
 
-    private fun showGroupMenu(group: String?, anchor: View) {
-        val popup = PopupMenu(this, anchor)
-        popup.menu.add(Menu.NONE, MENU_RENAME_GROUP, 0, R.string.group_rename)
-        // У специальной секции без группы удалять нечего: доступно только переименование.
-        if (group != null) popup.menu.add(Menu.NONE, MENU_DELETE_GROUP, 1, R.string.delete)
-        popup.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                MENU_RENAME_GROUP -> {
-                    promptRenameGroup(group)
-                    true
-                }
-
-                MENU_DELETE_GROUP -> {
-                    group?.let { confirmDeleteGroup(it) }
-                    true
-                }
-
-                else -> false
-            }
-        }
-        popup.show()
-    }
-
-    private fun promptRenameGroup(oldName: String?) {
-        val (view, input) = groupNameDialog(oldName ?: ungroupedSectionName())
+    private fun promptTagName(oldName: String?) {
+        val (view, input) = tagNameDialog(oldName.orEmpty())
         AlertDialog.Builder(this)
-            .setTitle(R.string.group_rename_title)
+            .setTitle(if (oldName == null) R.string.tag_new_title else R.string.tag_rename_title)
             .setView(view)
             .setNegativeButton(R.string.cancel, null)
             .setPositiveButton(android.R.string.ok) { _, _ ->
-                val name = input.text.toString().trim()
-                val conflict = if (oldName == null) {
-                    ReminderGroups.nameIsTaken(name, groupNames(), null)
-                } else {
-                    ReminderGroups.nameIsTaken(
-                        name,
-                        groupNames().filterNot { it.equals(oldName, true) },
-                        ungroupedSectionName()
-                    )
-                }
+                val name = TagNames.normalize(input.text.toString())
                 when {
-                    name.isEmpty() ->
-                        Toast.makeText(this, R.string.group_empty_name, Toast.LENGTH_SHORT).show()
+                    name == null -> toast(R.string.tag_empty_name)
 
-                    conflict ->
-                        Toast.makeText(this, R.string.group_exists, Toast.LENGTH_SHORT).show()
+                    TagNames.isTaken(currentTags(), name, oldName) -> toast(R.string.tag_exists)
 
-                    oldName == null -> {
-                        Groups.setUngroupedName(this, name)
-                        reload()
-                    }
+                    oldName == null -> createTag(name)
 
-                    else -> renameGroup(oldName, name)
+                    else -> renameTag(oldName, name)
                 }
             }
             .show()
@@ -300,67 +220,87 @@ class MainActivity : Activity() {
 
     /** Общий вид диалога: отступы контейнера совпадают с заголовком, поле выделяет текст. */
     @SuppressLint("InflateParams")
-    private fun groupNameDialog(value: String): Pair<View, EditText> {
-        val view = layoutInflater.inflate(R.layout.dialog_group_name, null)
-        val input = view.findViewById<EditText>(R.id.group_name_input)
+    private fun tagNameDialog(value: String): Pair<View, EditText> {
+        val view = layoutInflater.inflate(R.layout.dialog_name_input, null)
+        val input = view.findViewById<EditText>(R.id.name_input)
         input.setText(value)
         return view to input
     }
 
-    /** Переименование меняет только название группы у её напоминаний. */
-    private fun renameGroup(oldName: String, name: String) {
-        val affected = reminders.filter { it.group?.equals(oldName, ignoreCase = true) == true }
-        affected.forEach { it.group = name }
-        if (!ReminderStore.save(this, reminders)) {
-            affected.forEach { it.group = oldName }
-            Toast.makeText(this, R.string.save_error, Toast.LENGTH_LONG).show()
-            reload()
+    private fun createTag(name: String) {
+        val before = definedTags.toList()
+        TagNames.add(definedTags, name)
+        if (!Tags.save(this, definedTags)) {
+            definedTags = before.toMutableList()
+            toast(R.string.save_error)
             return
         }
-        val index = definedGroups.indexOfFirst { it.equals(oldName, ignoreCase = true) }
-        if (index >= 0) definedGroups[index] = name else GroupStoreSupport.add(definedGroups, name)
-        GroupStoreSupport.save(this, definedGroups)
-        Groups.renameExpanded(this, oldName, name)
         reload()
     }
 
-    /** Удаление группы снимает назначение, но не удаляет напоминания. */
-    private fun confirmDeleteGroup(name: String) {
+    /** Переименование меняет название тега и у всех напоминаний. */
+    private fun renameTag(oldName: String, name: String) {
+        val beforeTags = definedTags.toList()
+        val nextTags = beforeTags.toMutableList()
+        val index = nextTags.indexOfFirst { TagNames.same(it, oldName) }
+        if (index >= 0) nextTags[index] = name else TagNames.add(nextTags, name)
+        val affected = reminders.filter { TagNames.contains(it.tags, oldName) }
+        val snapshots = affected.map { it to it.tags.toList() }
+        affected.forEach { reminder ->
+            reminder.tags = TagNames.normalizeAll(
+                reminder.tags.map { if (TagNames.same(it, oldName)) name else it }
+            )
+        }
+        // Сначала сохраняются определения: при ошибке Tags.save назначения не меняются.
+        if (!Tags.saveEdit(this, reminders, beforeTags, nextTags)) {
+            snapshots.forEach { (reminder, tags) -> reminder.tags = tags.toMutableList() }
+            toast(R.string.save_error)
+            reload()
+            return
+        }
+        definedTags = nextTags
+        if (TagNames.same(activeTag, oldName)) activeTag = name
+        reload()
+    }
+
+    /** Удаление тега снимает его у напоминаний, но не удаляет напоминания. */
+    private fun confirmDeleteTag(tag: String) {
         AlertDialog.Builder(this)
-            .setTitle(R.string.group_delete_title)
-            .setMessage(getString(R.string.group_delete_message, name))
+            .setTitle(R.string.tag_delete_title)
+            .setMessage(getString(R.string.tag_delete_message, tag))
             .setNegativeButton(R.string.cancel, null)
             .setPositiveButton(R.string.delete) { _, _ ->
-                val affected = reminders.filter { it.group?.equals(name, ignoreCase = true) == true }
-                affected.forEach { it.group = null }
-                if (!ReminderStore.save(this, reminders)) {
-                    affected.forEach { it.group = name }
-                    Toast.makeText(this, R.string.save_error, Toast.LENGTH_LONG).show()
+                val beforeTags = definedTags.toList()
+                val nextTags = beforeTags.filterNot { TagNames.same(it, tag) }.toMutableList()
+                val affected = reminders.filter { TagNames.contains(it.tags, tag) }
+                val snapshots = affected.map { it to it.tags.toList() }
+                affected.forEach { reminder ->
+                    reminder.tags = TagNames.normalizeAll(
+                        reminder.tags.filterNot { TagNames.same(it, tag) }
+                    )
+                }
+                // Сначала сохраняются определения: при ошибке Tags.save назначения не меняются.
+                if (!Tags.saveEdit(this, reminders, beforeTags, nextTags)) {
+                    snapshots.forEach { (reminder, tags) -> reminder.tags = tags.toMutableList() }
+                    toast(R.string.save_error)
                     reload()
                     return@setPositiveButton
                 }
-                definedGroups.removeAll { it.equals(name, ignoreCase = true) }
-                GroupStoreSupport.save(this, definedGroups)
-                Groups.forgetExpanded(this, name)
+                definedTags = nextTags
+                if (TagNames.same(activeTag, tag)) activeTag = null
                 reload()
             }
             .show()
     }
 
-    private fun toggleGroup(name: String?) {
-        Groups.setExpanded(this, name, !Groups.isExpanded(this, name))
-        reload()
-    }
+    /** Все теги: объявленные и встретившиеся в напоминаниях (старые данные, импорт). */
+    private fun currentTags(): MutableList<String> = TagNames.merge(
+        definedTags,
+        reminders.asSequence().flatMap { it.tags.asSequence() }.toList()
+    )
 
-    private fun ungroupedSectionName(): String =
-        ungroupedDisplayName.ifEmpty { Groups.ungroupedName(this) }
-
-    /** Все группы: сохранённые и добавленные назначениями из резервной копии. */
-    private fun groupNames(): List<String> {
-        val names = mutableListOf<String>()
-        definedGroups.forEach { GroupStoreSupport.add(names, it) }
-        reminders.forEach { reminder -> reminder.group?.let { GroupStoreSupport.add(names, it) } }
-        return names
+    private fun toast(message: Int) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
     private fun handleExactAlarmState() {
@@ -395,27 +335,6 @@ class MainActivity : Activity() {
     private companion object {
         const val REQUEST_NOTIFICATIONS = 100
         const val MENU_EDIT = 1
-        const val MENU_MOVE = 2
         const val MENU_DELETE = 3
-        const val MENU_RENAME_GROUP = 4
-        const val MENU_DELETE_GROUP = 5
-    }
-}
-
-/** Небольшие операции со списком групп и его записью, чтобы не дублировать их в диалогах. */
-private object GroupStoreSupport {
-
-    fun add(names: MutableList<String>, raw: String): Boolean = Groups.addName(names, raw)
-
-    fun addAndSave(activity: Activity, names: MutableList<String>, raw: String) {
-        if (add(names, raw) && !Groups.save(activity, names)) {
-            Toast.makeText(activity, R.string.save_error, Toast.LENGTH_LONG).show()
-        }
-    }
-
-    fun save(activity: Activity, names: List<String>) {
-        if (!Groups.save(activity, names)) {
-            Toast.makeText(activity, R.string.save_error, Toast.LENGTH_LONG).show()
-        }
     }
 }

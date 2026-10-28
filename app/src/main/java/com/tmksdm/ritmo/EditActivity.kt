@@ -8,6 +8,8 @@ import android.os.Handler
 import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.TypedValue
+import android.view.Gravity
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -28,6 +30,8 @@ class EditActivity : Activity() {
     private enum class Preset { NONE, IN_15_MIN, IN_1_HOUR, TOMORROW_MORNING }
 
     private lateinit var titleInput: EditText
+    private lateinit var tagsContainer: LinearLayout
+    private lateinit var tagsEmpty: TextView
     private lateinit var repeatSpinner: Spinner
     private lateinit var dateTimeBlock: LinearLayout
     private lateinit var dateTimeLabel: TextView
@@ -66,6 +70,7 @@ class EditActivity : Activity() {
     private var lastType: RepeatType = RepeatType.ONCE
     private var preset = Preset.NONE
     private var appliedTheme = 0
+    private var selectedTags: MutableList<String> = mutableListOf()
 
     private val autosaveHandler = Handler(Looper.getMainLooper())
     private val autosaveRunnable = Runnable { autosaveNow() }
@@ -89,6 +94,7 @@ class EditActivity : Activity() {
         setUpRepeatSpinner()
         setUpNumericInputs()
         loadExistingReminder()
+        setUpTagChips()
         setUpListeners()
 
         findViewById<View>(R.id.back_button).setOnClickListener { finish() }
@@ -125,6 +131,8 @@ class EditActivity : Activity() {
 
     private fun bindViews() {
         titleInput = findViewById(R.id.title_input)
+        tagsContainer = findViewById(R.id.tags_container)
+        tagsEmpty = findViewById(R.id.tags_empty)
         repeatSpinner = findViewById(R.id.repeat_spinner)
         dateTimeBlock = findViewById(R.id.date_time_block)
         dateTimeLabel = findViewById(R.id.date_time_label)
@@ -248,6 +256,7 @@ class EditActivity : Activity() {
         }
         val reminder = ReminderStore.load(this).firstOrNull { it.id == id } ?: return
         existing = reminder
+        selectedTags = TagNames.normalizeAll(reminder.tags)
         titleInput.setText(reminder.title)
         lastType = reminder.repeatType
         repeatSpinner.setSelection(reminder.repeatType.ordinal)
@@ -281,6 +290,51 @@ class EditActivity : Activity() {
         // Отправная точка для автосохранения: без изменений запись не перезаписывается.
         lastSavedSnapshot = reminder.toJson().toString()
     }
+
+    /**
+     * Чипы существующих тегов. Отмеченные входят в selectedTags и сохраняются
+     * вместе с напоминанием; определение тега создаётся на главном экране.
+     */
+    private fun setUpTagChips() {
+        tagsContainer.removeAllViews()
+        val available = TagNames.merge(
+            Tags.load(this),
+            selectedTags
+        )
+        tagsEmpty.visibility = if (available.isEmpty()) View.VISIBLE else View.GONE
+        available.forEach { tag ->
+            val chip = CheckBox(this).apply {
+                text = tag
+                isChecked = TagNames.contains(selectedTags, tag)
+                setButtonDrawable(null)
+                background = getDrawable(R.drawable.segment_background)
+                setTextColor(resources.getColorStateList(R.color.chip_text, theme))
+                gravity = Gravity.CENTER
+                minHeight = dp(32)
+                setPadding(dp(10), 0, dp(10), 0)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { marginEnd = dp(6) }
+            }
+            chip.setOnCheckedChangeListener { _, checked ->
+                if (checked) {
+                    TagNames.add(selectedTags, tag)
+                } else {
+                    selectedTags.removeAll { TagNames.same(it, tag) }
+                }
+                scheduleAutosave(0L)
+            }
+            tagsContainer.addView(chip)
+        }
+    }
+
+    private fun dp(value: Int): Int = TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        value.toFloat(),
+        resources.displayMetrics
+    ).toInt()
 
     private fun setUpListeners() {
         repeatSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -474,6 +528,7 @@ class EditActivity : Activity() {
         target.windowEnabled = windowSwitch.isChecked
         target.windowStartMinutes = windowStart.get(Calendar.HOUR_OF_DAY) * 60 + windowStart.get(Calendar.MINUTE)
         target.windowEndMinutes = windowEnd.get(Calendar.HOUR_OF_DAY) * 60 + windowEnd.get(Calendar.MINUTE)
+        target.tags = TagNames.normalizeAll(selectedTags)
         return target
     }
 
