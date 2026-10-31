@@ -98,8 +98,18 @@ pwsh -NoProfile -File scripts/set-github-signing-secrets.ps1 -Keystore D:\keys\r
 `913ccbab919ca5bb13a889f50b5d02567febb72806f237c40ce80cbec8bcfad9`
 (`CN=Ritmo, O=tmksdm, C=RU`). Отдельная переменная для него не нужна.
 
-Workflow `.github/workflows/release.yml` запускается только вручную и становится доступен
-после публикации файла в `main`.
+Workflow `.github/workflows/release.yml` запускается автоматически при push в `main`,
+если `version.properties` реально увеличилась. Обычный push без изменения версии Release
+не создаёт; comment-only изменение файла версии тоже не публикует. Тег — `v<versionName>`
+из `version.properties`; уже существующие тег или Release не перезаписываются.
+Ручной `workflow_dispatch` сохранён для сборки artifact и повторной публикации.
+
+```sh
+./gradlew newVersion
+git add version.properties
+git commit -m "release: <versionName>"
+git push origin main          # запускает подписанную сборку и GitHub Release
+```
 
 Собрать и получить artifact без публикации:
 
@@ -109,8 +119,8 @@ gh run list --repo tmksdm/ritmo --workflow release.yml
 gh run download <run-id> --repo tmksdm/ritmo -n ritmo-<versionName>-signed
 ```
 
-Создать GitHub Release можно только отдельным запуском из `main`, когда версия уже
-согласована. Тег должен точно совпадать с `v<versionName>` из `version.properties`:
+Ручной запуск публикации для уже подготовленной версии из `main` (например, повторный
+запуск) требует точного тега:
 
 ```sh
 gh workflow run release.yml --repo tmksdm/ritmo \

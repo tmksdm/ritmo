@@ -4,20 +4,23 @@
 
 ## Состояние
 
-- Ветка `main`; CI-изменения входят в текущий коммит поверх `bd7c77d`.
-  `version.properties` — `261025/2` (`2610.25.2`), версия не менялась.
+- Ветка `main`, HEAD `abd2228` (CI-настройки), запушен в `origin/main`.
+  Подготовлена версия `2610.31` (`26103101`, тег `v2610.31`); `version.properties`
+  входит в этот коммит. Push запускает авто-Release, но Release ещё не опубликован.
+  Предыдущая опубликованная версия — `2610.25.2`.
 - Теги реализованы и закоммичены; независимое ревью PASS, проверка на телефоне ещё
   не выполнена. Новый release не выпускался.
 - Последний опубликованный выпуск остаётся `2610.25.2` (`26102502`, релиз `v2610.25.2`);
   он ждёт проверки пользователем на телефоне. Публикация не равна приёмке.
 - Постоянный ключ `D:\Pr\keys\ritmo-release.jks` и локальный `keystore.properties`
-  на машине разработчика есть; значения не читались и не выводились. Локальная
-  release-сборка проверена: сертификат `CN=Ritmo`, SHA-256
-  `913ccbab919ca5bb13a889f50b5d02567febb72806f237c40ce80cbec8bcfad9`,
-  версия `2610.25.2` (`26102502`), размер 111 364 байта.
-- Добавлены ручной workflow `.github/workflows/release.yml` и bootstrap
-  `scripts/set-github-signing-secrets.ps1`. Секреты и alias загружены в GitHub;
-  workflow публикуется этим коммитом, первый CI-запуск без Release ещё не выполнялся.
+  на машине разработчика есть; значения не выводились и не попадали в Git. Bootstrap
+  передал их из файлов в GitHub. Локальная сборка `2610.31` подписана `CN=Ritmo`
+  (`913ccbab...bcfad9`), release 111 352 байта, debug 949 564 байта.
+- Workflow `.github/workflows/release.yml` дополнен автоматическим Release при push
+  в `main` с реальным увеличением `version.properties`; ручной `workflow_dispatch`
+  сохранён. Изменение входит в этот коммит; server run ещё не было.
+  Предыдущий CI `run 41171773391` (commit `abd2228`) успешно собрал `2610.25.2`
+  без публикации Release.
 
 ## Текущая работа: теги вместо групп
 
@@ -99,10 +102,26 @@
   секрета/переменной из stdin, `--body` не используется. По исходнику `gh v2.97.0`
   (`pkg/cmd/secret/set/set.go`) stdin читается через `io.ReadAll`, обрезаются только
   завершающие `\r\n`; пробелы не обрезаются, а скрипт не добавляет newline.
-  Секреты и alias загружены; первый workflow на GitHub ещё не запускался.
+  Секреты и alias загружены; реальный `gh` при загрузке не печатал значения.
+- GitHub Actions server run `41171773391` (commit `abd2228`, `publish_release=false`):
+  success, job сборки успешен, job публикации пропущен. Artifact
+  `ritmo-2610.25.2-signed` скачан в `D:\Pr\ritmo\dist\ci-run-41171773391`;
+  независимо проверены одна подпись `CN=Ritmo`
+  (`913ccbab...bcfad9`), `versionName 2610.25.2`/`versionCode 26102502`,
+  `minSdk 26`/`targetSdk 35`, размер 111 364 байта и SHA-256
+  `9108baef80652d11f66fafbbfa40484fdc006553e3929d9f047986c87024e193`.
+  Новых Release и тегов не появилось (12 до и после, набор тегов совпадает).
+- Подготовка `2610.31`: `./gradlew newVersion` дал `2610.31` (`26103101`), clean
+  `assembleDebug assembleRelease` — `BUILD SUCCESSFUL`. Release 111 352 байта,
+  подпись `CN=Ritmo` (`913ccbab...bcfad9`), одна подпись; debug 949 564 байта.
+  `lintVitalRelease` прошёл в составе `assembleRelease`.
+- Авто-Release: `actionlint 1.7.12` — без замечаний; логика решения проверена локально:
+  push с увеличением версии -> publish=true/tag `v2610.31`, push без увеличения ->
+  publish=false, manual publish с точным тегом -> true, неверный тег/нулевой before -> fail.
+  Реальный push-trigger и job публикации ещё не запускались.
 - Не проверено: реальный `filesDir` на Android-устройстве (миграция проверена на подмене
-  `Context`), интерфейс на телефоне, установка поверх, фактический запуск GitHub Actions.
-  Эмулятора и телефона нет.
+  `Context`), интерфейс на телефоне, установка поверх, серверный push-trigger авто-Release
+  и job публикации. Эмулятора и телефона нет.
 
 ## Обстановка
 
@@ -113,13 +132,14 @@
   без указания пользователя не менять.
 - Релиз (только по отдельному указанию): подписанный release APK без «debug» в имени,
   ключ `D:\Pr\keys\ritmo-release.jks` и `keystore.properties` вне Git. Ключ не читать и не менять.
-- CI-релиз: `.github/workflows/release.yml`, только ручной `workflow_dispatch`.
-  Секреты `RITMO_KEYSTORE_BASE64`, `RITMO_KEYSTORE_PASSWORD`, `RITMO_KEY_PASSWORD`;
-  переменная `RITMO_KEY_ALIAS`. Публичный SHA-256 сертификата закреплён в workflow.
-  Секреты загружаются с машины с ключом через `scripts/set-github-signing-secrets.ps1`
-  (значения не выводятся).
-  Сборка без публикации — `publish_release=false`; Release — только из `main` с
-  `publish_release=true` и точным тегом `v<versionName>`. Workflow проверяет наличие
+- CI-релиз: `.github/workflows/release.yml` — push в `main` при реальном увеличении
+  `version.properties` автоматически собирает и публикует Release; ручной
+  `workflow_dispatch` сохранён. Секреты `RITMO_KEYSTORE_BASE64`, `RITMO_KEYSTORE_PASSWORD`,
+  `RITMO_KEY_PASSWORD`; переменная `RITMO_KEY_ALIAS`. Публичный SHA-256 сертификата
+  закреплён в workflow. Секреты загружаются с машины с ключом через
+  `scripts/set-github-signing-secrets.ps1` (значения не выводятся).
+  Ручная сборка без публикации — `publish_release=false`; ручная публикация — из `main`
+  с `publish_release=true` и точным тегом `v<versionName>`. Workflow проверяет наличие
   SDK 35; если состав `ubuntu-latest` изменится, установить явно через `sdkmanager`
   `platforms;android-35` и `build-tools;35.0.0`.
 - Проверка логики без устройства: временный JVM-проект с копиями `Reminder.kt`, `Schedules.kt`,
@@ -137,10 +157,9 @@
 1. Проверка пользователем на телефоне: теги у переключателя, фильтр/сброс/пустой результат,
    создание/переименование/удаление, несколько тегов, сохранение расписаний, миграция
    установленной версии с группами.
-2. B1 закрыт, секреты и alias загружены. Этот коммит публикует workflow; следующий
-   шаг — первый server run `publish_release=false` и проверка artifact. Release создаётся
-   только отдельным запуском из `main` с `publish_release=true` и тегом `v<versionName>`,
-   когда версия согласована. Новые этапы самостоятельно не начинать.
+2. Ревью PASS. Этот коммит запускает push-trigger в `main` с увеличением
+   `version.properties`; после push проверить run, Release `v2610.31`, asset и установить
+   APK на телефон. Ручной запуск остаётся fallback. Новые этапы самостоятельно не начинать.
 
 ## Чек-лист ревьюера
 
@@ -157,12 +176,14 @@
    и будильники не меняются; `version.properties` не изменён.
 6. Сборка и `lintVital`/`lintDebug`; на устройстве проверить темы, отступы и читаемость
    длинных тегов. Дефекты указывать точечно, объём не расширять.
-7. CI: workflow только `workflow_dispatch`; fail-fast без секретов; подпись обязательна
+7. CI: workflow поддерживает `workflow_dispatch` и push в `main` только при изменении
+   `version.properties`; fail-fast без секретов; подпись обязательна
    (`RITMO_REQUIRE_RELEASE_SIGNING`); проверяются ровно одна подпись и SHA-256 сертификата,
    `package`, `versionName`/`versionCode`, `minSdk`/`targetSdk`, размер ≤ 5 МиБ; debug APK
    отсекается; artifact содержит подписанный APK и SHA-256.
-8. Публикация: только из `main`, только при `publish_release=true` и точном теге
-   `v<versionName>`; существующие тег/релиз не перезаписываются. Новый Release и версия
-   в этом этапе не создавались.
+8. Авто-публикация: Release создаётся только из `main` при реальном увеличении
+   `versionCode` в `version.properties`, тег точно `v<versionName>`; comment-only и
+   неувеличение версии не публикуют; существующие тег/релиз не перезаписываются.
+   Ручной запуск сохранён. Текущая версия `2610.31` ещё не опубликована.
 9. Секреты: в Git и документации нет значений ключа/паролей; bootstrap-скрипт не печатает
    их и загружает через `gh` из файлов вне репозитория.

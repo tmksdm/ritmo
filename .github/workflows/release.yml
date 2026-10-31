@@ -1,8 +1,13 @@
 name: Ritmo signed release
 
-# Ручной процесс: сначала собирается и проверяется APK, публикация Release —
-# только отдельным запуском с publish_release=true и точным тегом v<versionName>.
+# Push в main с реальным увеличением version.properties собирает и публикует
+# Release автоматически. Ручной workflow_dispatch сохранён для сборки/повторной
+# публикации; при publish_release=false Release не создаётся.
 on:
+  push:
+    branches: [main]
+    paths:
+      - version.properties
   workflow_dispatch:
     inputs:
       publish_release:
@@ -13,6 +18,10 @@ on:
         description: "Тег релиза v<versionName> из version.properties (нужен при publish_release=true)"
         type: string
         required: false
+
+concurrency:
+  group: ritmo-release-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -26,9 +35,13 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.name }}
       version_code: ${{ steps.version.outputs.code }}
+      publish: ${{ steps.release.outputs.publish }}
+      release_tag: ${{ steps.release.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Проверить подпись и входные данные
         shell: bash
@@ -75,18 +88,65 @@ jobs:
           echo "code=$code" >> "$GITHUB_OUTPUT"
           echo "Версия: $version ($code)"
 
-      - name: Сверить тег с версией
-        if: github.event.inputs.publish_release == 'true'
+      - name: Определить параметры публикации
+        id: release
         shell: bash
         env:
-          RELEASE_TAG: ${{ github.event.inputs.release_tag }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          BEFORE_SHA: ${{ github.event.before }}
+          INPUT_PUBLISH: ${{ github.event.inputs.publish_release }}
+          INPUT_TAG: ${{ github.event.inputs.release_tag }}
+          VERSION_NAME: ${{ steps.version.outputs.name }}
+          VERSION_CODE: ${{ steps.version.outputs.code }}
         run: |
           set -euo pipefail
-          expected="v${{ steps.version.outputs.name }}"
-          if [ "$RELEASE_TAG" != "$expected" ]; then
-            echo "::error::Тег '$RELEASE_TAG' не совпадает с версией; ожидается '$expected'"
+          tag="v$VERSION_NAME"
+          publish=false
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            if [ "$INPUT_PUBLISH" = "true" ]; then
+              if [ "$INPUT_TAG" != "$tag" ]; then
+                echo "::error::Тег '$INPUT_TAG' не совпадает с версией; ожидается '$tag'"
+                exit 1
+              fi
+              publish=true
+            fi
+          elif [ "$EVENT_NAME" = "push" ]; then
+            if [ "$REF" != "refs/heads/main" ]; then
+              echo "::error::Автоматическая публикация разрешена только из main"
+              exit 1
+            fi
+            if [ -z "$BEFORE_SHA" ] || [ "$BEFORE_SHA" = "0000000000000000000000000000000000000000" ]; then
+              echo "::error::Не удалось определить предыдущий коммит push"
+              exit 1
+            fi
+            git cat-file -e "$BEFORE_SHA^{commit}" || {
+              echo "::error::Предыдущий коммит push недоступен"
+              exit 1
+            }
+            if git show "$BEFORE_SHA:version.properties" > "$RUNNER_TEMP/version-before.properties" 2>/dev/null; then
+              old_date=$(sed -n 's/^versionDate=//p' "$RUNNER_TEMP/version-before.properties" | tr -d '\r' | head -n1)
+              old_number=$(sed -n 's/^versionNumber=//p' "$RUNNER_TEMP/version-before.properties" | tr -d '\r' | head -n1)
+              [[ "$old_date" =~ ^[0-9]{6}$ ]] || { echo "::error::Некорректный старый versionDate"; exit 1; }
+              [[ "$old_number" =~ ^[0-9]+$ ]] || { echo "::error::Некорректный старый versionNumber"; exit 1; }
+              old_code=$((10#$old_date * 100 + 10#$old_number))
+              if [ "$VERSION_CODE" -gt "$old_code" ]; then
+                publish=true
+              else
+                echo "Версия не увеличилась ($old_code -> $VERSION_CODE); Release не создаётся"
+              fi
+            else
+              echo "version.properties отсутствовал до push; автоматическая публикация пропущена"
+            fi
+          else
+            echo "::error::Неизвестное событие: $EVENT_NAME"
             exit 1
           fi
+
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Публикация: $publish, тег: $tag"
 
       - name: JDK 17
         uses: actions/setup-java@v4
@@ -196,7 +256,7 @@ jobs:
   publish:
     name: Опубликовать GitHub Release
     needs: build
-    if: github.ref == 'refs/heads/main' && github.event.inputs.publish_release == 'true'
+    if: github.ref == 'refs/heads/main' && needs.build.outputs.publish == 'true'
     runs-on: ubuntu-latest
     concurrency:
       group: ritmo-publish
@@ -214,7 +274,7 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.event.inputs.release_tag }}
+          RELEASE_TAG: ${{ needs.build.outputs.release_tag }}
           VERSION_NAME: ${{ needs.build.outputs.version }}
           VERSION_CODE: ${{ needs.build.outputs.version_code }}
           COMMIT_SHA: ${{ github.sha }}
