@@ -23,10 +23,39 @@ val ritmoVersionName = if (versionNumber <= 1) versionDay else "$versionDay.$ver
 val ritmoVersionCode = (versionDate.toIntOrNull() ?: 260101) * 100 + versionNumber
 
 // Постоянная подпись релизов. keystore.properties в git не попадает,
-// сам ключ лежит вне репозитория.
+// сам ключ лежит вне репозитория. В CI ключ и пароли приходят только через
+// переменные окружения, чтобы не создавать файл с секретами в рабочей копии.
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties().apply {
     if (keystorePropertiesFile.exists()) keystorePropertiesFile.inputStream().use { load(it) }
+}
+if (keystorePropertiesFile.exists()) {
+    val missing = listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
+        .filter { keystoreProperties.getProperty(it).isNullOrBlank() }
+    if (missing.isNotEmpty()) {
+        throw GradleException("В keystore.properties нет полей: ${missing.joinToString()}.")
+    }
+}
+val envKeystoreFile = System.getenv("RITMO_KEYSTORE_FILE")?.takeIf { it.isNotBlank() }
+val envKeystore = envKeystoreFile?.let { file(it) }
+val requireReleaseSigning = System.getenv("RITMO_REQUIRE_RELEASE_SIGNING")
+    ?.equals("true", ignoreCase = true) == true
+val hasReleaseSigning = envKeystore != null || keystorePropertiesFile.exists()
+
+fun requiredEnv(name: String): String =
+    System.getenv(name)?.takeIf { it.isNotBlank() }
+        ?: throw GradleException("Не задано окружение $name для подписи release")
+
+if (envKeystore != null && !envKeystore.isFile) {
+    throw GradleException("RITMO_KEYSTORE_FILE указывает на отсутствующий файл ключа")
+}
+
+if (requireReleaseSigning && !hasReleaseSigning) {
+    throw GradleException(
+        "Release-подпись обязательна: задайте RITMO_KEYSTORE_FILE, RITMO_KEYSTORE_PASSWORD, " +
+            "RITMO_KEY_ALIAS и RITMO_KEY_PASSWORD либо добавьте keystore.properties. " +
+            "Публикация APK с debug-подписью запрещена."
+    )
 }
 
 android {
@@ -42,12 +71,19 @@ android {
     }
 
     signingConfigs {
-        if (keystorePropertiesFile.exists()) {
+        if (hasReleaseSigning) {
             create("release") {
-                storeFile = file(keystoreProperties.getProperty("storeFile"))
-                storePassword = keystoreProperties.getProperty("storePassword")
-                keyAlias = keystoreProperties.getProperty("keyAlias")
-                keyPassword = keystoreProperties.getProperty("keyPassword")
+                if (envKeystore != null) {
+                    storeFile = envKeystore
+                    storePassword = requiredEnv("RITMO_KEYSTORE_PASSWORD")
+                    keyAlias = requiredEnv("RITMO_KEY_ALIAS")
+                    keyPassword = requiredEnv("RITMO_KEY_PASSWORD")
+                } else {
+                    storeFile = file(keystoreProperties.getProperty("storeFile"))
+                    storePassword = keystoreProperties.getProperty("storePassword")
+                    keyAlias = keystoreProperties.getProperty("keyAlias")
+                    keyPassword = keystoreProperties.getProperty("keyPassword")
+                }
             }
         }
     }

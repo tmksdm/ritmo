@@ -59,17 +59,77 @@ export JAVA_HOME=/path/to/jdk17
 
 Release-сборка включает R8 и удаление неиспользуемых ресурсов.
 
-## Подпись релизов
+## Подпись и выпуск релизов
 
 Все выпуски подписываются одним постоянным ключом — без него Android не позволит
 обновить установленное приложение.
 
-- Ключ: `D:\Pr\keys\ritmo-release.jks` (лежит вне репозитория).
-- Параметры подключения: `keystore.properties` в корне проекта (в git не попадает).
-- Если файла `keystore.properties` нет, release собирается с debug-подписью — сборка
-  не падает, но такой APK нельзя установить поверх релизного.
+- Ключ: `D:\Pr\keys\ritmo-release.jks` (лежит вне репозитория и в Git не попадает).
+- Параметры подключения: `keystore.properties` в корне проекта (в Git не попадает).
+- Если файла `keystore.properties` нет, локальная release-сборка получает debug-подпись —
+  это удобно для проверки, но такой APK нельзя публиковать. В GitHub Actions включён
+  обязательный режим подписи, а проверка сертификата не пропускает debug APK.
 
 Храните ключ и пароль к нему в надёжном месте: с их потерей обновления станут невозможны.
+
+### Выпуск с любого компьютера (GitHub Actions)
+
+Ключ не привязан к исходной машине: на новом компьютере достаточно ключа и
+`keystore.properties`, а CI получает ключ из GitHub Actions Secrets. В репозитории
+нет ни ключа, ни паролей.
+
+Один раз на машине с ключом:
+
+```powershell
+pwsh -NoProfile -File scripts/set-github-signing-secrets.ps1
+# ключ в другом месте:
+pwsh -NoProfile -File scripts/set-github-signing-secrets.ps1 -Keystore D:\keys\ritmo-release.jks
+```
+
+Скрипт читает ключ и `keystore.properties`, передаёт значения в stdin процесса `gh`
+без добавления перевода строки; `--body` и аргументы командной строки для секретов
+не используются. Значения не выводятся. Имена:
+
+- Secrets: `RITMO_KEYSTORE_BASE64` (ключ в base64), `RITMO_KEYSTORE_PASSWORD`,
+  `RITMO_KEY_PASSWORD`.
+- Variables: `RITMO_KEY_ALIAS`.
+
+Ожидаемый SHA-256 сертификата постоянного ключа закреплён в workflow:
+`913ccbab919ca5bb13a889f50b5d02567febb72806f237c40ce80cbec8bcfad9`
+(`CN=Ritmo, O=tmksdm, C=RU`). Отдельная переменная для него не нужна.
+
+Workflow `.github/workflows/release.yml` запускается только вручную и становится доступен
+после публикации файла в `main`.
+
+Собрать и получить artifact без публикации:
+
+```sh
+gh workflow run release.yml --repo tmksdm/ritmo -f publish_release=false
+gh run list --repo tmksdm/ritmo --workflow release.yml
+gh run download <run-id> --repo tmksdm/ritmo -n ritmo-<versionName>-signed
+```
+
+Создать GitHub Release можно только отдельным запуском из `main`, когда версия уже
+согласована. Тег должен точно совпадать с `v<versionName>` из `version.properties`:
+
+```sh
+gh workflow run release.yml --repo tmksdm/ritmo \
+  -f publish_release=true -f release_tag=v<versionName>
+```
+
+Workflow до сборки падает, если не заданы секреты, а после сборки проверяет: одну
+release-подпись с ожидаемым SHA-256 сертификата, `package`, `versionName`/`versionCode`,
+`minSdk`/`targetSdk` и размер APK не больше 5 МиБ. Debug-подпись не проходит проверку.
+В artifact и Release попадает только `ritmo-<versionName>.apk` и его SHA-256.
+
+CI использует предустановленный Android SDK из `ubuntu-latest`. Если его состав изменится
+и проверка сообщит об отсутствии `platforms;android-35` или `build-tools;35.0.0`, добавьте
+перед сборкой явную установку:
+
+```sh
+yes | sdkmanager --licenses
+sdkmanager "platforms;android-35" "build-tools;35.0.0"
+```
 
 ## Установка
 
